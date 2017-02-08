@@ -26,7 +26,7 @@ If you haven't installed heroku cli yet, first you should install it.
 
 * git clone https://github.com/kakakikikeke/memo.git
 * cd memo
-* git checkout for_heroku_container
+* git checkout -b for_heroku_container origin/for_heroku_container
 * heroku create -a memo-app-12345
 * heroku addons:create heroku-redis:hobby-dev
 * heroku config
