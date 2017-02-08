@@ -7,7 +7,6 @@ web:
   links:
     - redis
   environment:
-    - REDIS_SERVER=redis
-    - REDIS_SERVER_PORT=6379
+    - REDIS_URL=redis://redis:6379
 redis:
   image: redis:latest

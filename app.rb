@@ -1,9 +1,8 @@
 require 'sinatra'
 require 'redis'
 
-rs = ENV['REDIS_SERVER'] || 'localhost'
-rsp = ENV['REDIS_SERVER_PORT'] || '6379'
-redis = Redis.new host: rs, port: rsp
+url = ENV['REDIS_URL'] || 'redis://localhost:6379'
+redis = Redis.new :url => url
 
 get '/' do
   @memos = redis.lrange :memos, 0, -1
