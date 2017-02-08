@@ -1,6 +1,5 @@
 web:
   build: .
-  command: bundle exec rackup config.ru -o 0.0.0.0
   ports:
     - 80:9292
   volumes:
