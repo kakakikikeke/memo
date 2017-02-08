@@ -1,0 +1,16 @@
+# ruby
+.env
+.bundle
+vendor/bundle
+.ruby-version
+
+# git
+.git
+.gitignore
+
+# log
+log
+tmp
+
+# docker
+.dockerignore

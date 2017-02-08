@@ -1,0 +1,14 @@
+web:
+  build: .
+  command: bundle exec rackup config.ru -o 0.0.0.0
+  ports:
+    - 80:9292
+  volumes:
+    - .:/app
+  links:
+    - redis
+  environment:
+    - REDIS_SERVER=redis
+    - REDIS_SERVER_PORT=6379
+redis:
+  image: redis:latest
