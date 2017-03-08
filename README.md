@@ -21,16 +21,8 @@ If you haven't installed docker and docker-compose yet, first you should install
 
 You can access with your browser to "http://localhost/".
 
-### Heroku Container Registry
-If you haven't installed heroku cli yet, first you should install it.
-
+### vSphere Integrated Contanier
 * git clone https://github.com/kakakikikeke/memo.git
 * cd memo
-* git checkout -b for_heroku_container origin/for_heroku_container
-* heroku create -a memo-app-12345
-* heroku addons:create heroku-redis:hobby-dev
-* heroku config
-* heroku container:push web
-* heroku open
-
-You can acces with your browser to "https://memo-app-12345.herokuapp.com/".
+* git checkout -b for_vch origin/for_vch
+* docker-compose up -d
