@@ -4,6 +4,8 @@ This is a sample application for docker-compose.
 The "memo" is easy to save your memory wherever you want.  
 This app is powerd by sinatra and redis.
 
+[![Deploy to Docker Cloud](https://files.cloud.docker.com/images/deploy-to-dockercloud.svg)](https://cloud.docker.com/stack/deploy/?repo=https://github.com/kakakikikeke/memo)
+
 ## How to build
 
 ### localhost on standard ruby
