@@ -7,7 +7,6 @@ web:
   links:
     - redis
   environment:
-    - REDIS_HOST=redis
-    - REDIS_POST=6379
+    - REDIS_URL=redis://redis:6379/0
 redis:
   image: redis:latest
