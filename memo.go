@@ -27,9 +27,13 @@ func NewClient() (client *redis.Client) {
 	if p := os.Getenv("REDIS_POST"); p != "" {
 		port = p
 	}
+	password := ""
+	if p := os.Getenv("REDIS_PASSWORD"); p != "" {
+		password = p
+	}
 	client = redis.NewClient(&redis.Options{
 		Addr:     host + ":" + port,
-		Password: "",
+		Password: password,
 		DB:       0,
 	})
 	return client
