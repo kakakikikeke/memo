@@ -19,23 +19,15 @@ type MainController struct {
 }
 
 func NewClient() (client *redis.Client) {
-	host := "localhost"
-	if h := os.Getenv("REDIS_HOST"); h != "" {
-		host = h
+	redisURL := "redis://localhost:6379/0"
+	if url := os.Getenv("REDIS_URL"); url != "" {
+		redisURL = url
 	}
-	port := "6379"
-	if p := os.Getenv("REDIS_POST"); p != "" {
-		port = p
+	opt, err := redis.ParseURL(redisURL)
+	if err != nil {
+		panic(err)
 	}
-	password := ""
-	if p := os.Getenv("REDIS_PASSWORD"); p != "" {
-		password = p
-	}
-	client = redis.NewClient(&redis.Options{
-		Addr:     host + ":" + port,
-		Password: password,
-		DB:       0,
-	})
+	client = redis.NewClient(opt)
 	return client
 }
 
