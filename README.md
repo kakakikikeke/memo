@@ -1,5 +1,7 @@
 # memo
 
+![screen_shot.png](https://raw.githubusercontent.com/kakakikikeke/memo/ver_golang/images/screen_shot.png)
+
 This is a sample application for docker-compose.  
 The "memo" is easy to save your memory wherever you want.  
 This app is powerd by beego and redis.
