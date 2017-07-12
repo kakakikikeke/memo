@@ -37,7 +37,11 @@ func (mc *MainController) List() {
 		panic(err)
 	}
 	logs.Debug(memos)
+	mc.Layout = "layout.tpl"
 	mc.TplName = "list.tpl"
+	mc.LayoutSections = make(map[string]string)
+	mc.LayoutSections["Header"] = "header.tpl"
+	mc.LayoutSections["Scripts"] = "scripts.tpl"
 	mc.Data["memos"] = memos
 }
 
