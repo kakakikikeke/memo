@@ -12,6 +12,14 @@ This app is powerd by beego and redis.
 If you haven't installed redis-server yet, first you should install redis-server.  
 The "memo" is connected to localhost:6379 redis-server.
 
+Install libraries.
+
+* go get -u github.com/go-redis/redis
+* go get github.com/astaxie/beego
+* go get github.com/astaxie/beego/logs
+
+And run it.
+
 * go run memo.go
 
 You can access with your browser to "http://localhost:8080/".
