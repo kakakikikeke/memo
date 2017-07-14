@@ -33,8 +33,18 @@
       </h2>
       <div class="field">
         <p class="control">
-          <input class="input" type="text" id="value" placeholder="something">
+          <label class="checkbox">
+            <input type="checkbox" id="toggle">Textbox</input>
+          </label>
+        </p>
+      </div>
+      <div class="field">
+        <p class="control">
+          <input class="input" type="text" placeholder="something" id="value">
 	</p>
+        <p class="control">
+          <textarea class="textarea" placeholder="some lines" id="values" style="display:none"></textarea>
+        </p>
       </div>
       <div class="field">
         <p class="control">
@@ -42,7 +52,8 @@
         </p>
       </div>
       {{ range $memo := .memos }}
-      <p>{{ $memo }}</p>
+        {{ $replaced_memo := rep $memo "\n" "<br>" }}
+        <div>{{ str2html $replaced_memo }}</div>
       {{ end }}
     </div>
   </div>
