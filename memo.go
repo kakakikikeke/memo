@@ -3,6 +3,7 @@ package main
 import (
 	"os"
 	"strconv"
+	"strings"
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
 	"github.com/go-redis/redis"
@@ -67,6 +68,10 @@ func (mc *MainController) Insert() {
 	mc.Redirect("/", 302)
 }
 
+func replace(str string, from string, to string)(out string){
+	return strings.Replace(str, from, to, -1)
+}
+
 func main() {
 	port := 8080
 	if p := os.Getenv("PORT"); p != "" {
@@ -80,5 +85,6 @@ func main() {
 	beego.Router("/clear", new(MainController), "post:Clear")
 	beego.Router("/insert", new(MainController), "post:Insert")
 	beego.Router("/*", new(MainController), "*:List")
+	beego.AddFuncMap("rep", replace)
 	beego.Run()
 }
