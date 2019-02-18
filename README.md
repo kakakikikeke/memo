@@ -41,3 +41,5 @@ You can access with your browser to "http://localhost/".
 * heroku config:set REDIS_URL=redis://user:pass@ec2-00-000-000-000.compute-1.amazonaws.com:12345
 * heroku container:push web
 * heroku open
+
+You can acces with your browser to "https://memo-app-12345.herokuapp.com/".
