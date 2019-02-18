@@ -1,20 +1,28 @@
 # memo
 
+![screen_shot.png](https://raw.githubusercontent.com/kakakikikeke/memo/ver_golang/images/screen_shot.png)
+
 This is a sample application for docker-compose.  
 The "memo" is easy to save your memory wherever you want.  
-This app is powerd by sinatra and redis.
-
-[![Deploy to Docker Cloud](https://files.cloud.docker.com/images/deploy-to-dockercloud.svg)](https://cloud.docker.com/stack/deploy/?repo=https://github.com/kakakikikeke/memo)
+This app is powerd by beego and redis.
 
 ## How to build
 
-### localhost on standard ruby
+### localhost on standard golang
 If you haven't installed redis-server yet, first you should install redis-server.  
 The "memo" is connected to localhost:6379 redis-server.
 
-* bundle install && bundle exec rackup config.ru -o 0.0.0.0
+Install libraries.
 
-You can access with your browser to "http://localhost:9292/".
+* go get -u github.com/go-redis/redis
+* go get github.com/astaxie/beego
+* go get github.com/astaxie/beego/logs
+
+And run it.
+
+* go run memo.go
+
+You can access with your browser to "http://localhost:8080/".
 
 ### localhost on Docker (docker-compose)
 If you haven't installed docker and docker-compose yet, first you should install them.
@@ -23,13 +31,14 @@ If you haven't installed docker and docker-compose yet, first you should install
 
 You can access with your browser to "http://localhost/".
 
-### vSphere Integrated Contanier
+### Heroku Container Registry
 * git clone https://github.com/kakakikikeke/memo.git
 * cd memo
-* git checkout -b for_heroku_container origin/for_heroku_container
+* git checkout -b ver_golang origin/ver_golang
 * heroku create -a memo-app-12345
+  * or `heroku git:remote --app memo-app-12345`
 * heroku addons:create heroku-redis:hobby-dev
-* heroku config
+* heroku config:set REDIS_URL=redis://user:pass@ec2-00-000-000-000.compute-1.amazonaws.com:12345
 * heroku container:push web
 * heroku open
 
