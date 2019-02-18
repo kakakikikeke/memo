@@ -1,9 +1,7 @@
 web:
-  build: .
+  image: kakakikikeke/memo
   ports:
     - 80:9292
-  volumes:
-    - .:/app
   links:
     - redis
   environment:

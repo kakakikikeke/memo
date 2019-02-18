@@ -23,9 +23,7 @@ If you haven't installed docker and docker-compose yet, first you should install
 
 You can access with your browser to "http://localhost/".
 
-### Heroku Container Registry
-If you haven't installed heroku cli yet, first you should install it.
-
+### vSphere Integrated Contanier
 * git clone https://github.com/kakakikikeke/memo.git
 * cd memo
 * git checkout -b for_heroku_container origin/for_heroku_container
