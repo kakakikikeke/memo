@@ -1,0 +1,10 @@
+web:
+  image: kakakikikeke/memo
+  ports:
+    - 80:9292
+  links:
+    - redis
+  environment:
+    - REDIS_URL=redis://redis:6379
+redis:
+  image: redis:latest
