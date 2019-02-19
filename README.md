@@ -6,9 +6,7 @@ This is a sample application for docker-compose.
 The "memo" is easy to save your memory wherever you want.  
 This app is powerd by beego and redis.
 
-## How to build
-
-### localhost on standard golang
+## localhost on standard golang
 If you haven't installed redis-server yet, first you should install redis-server.  
 The "memo" is connected to localhost:6379 redis-server.
 
@@ -24,12 +22,23 @@ And run it.
 
 You can access with your browser to "http://localhost:8080/".
 
-### localhost on Docker (docker-compose)
+## localhost on Docker (docker-compose)
 If you haven't installed docker and docker-compose yet, first you should install them.
 
 * docker-compose up -d
 
 You can access with your browser to "http://localhost/".
+
+## localhost on minikube (kompose)
+If you haven't installed minikube yet, first you should install it.
+
+```
+kompose convert -f docker-compose-for-kubernetes.yml
+kompose up -f docker-compose-for-kubernetes.yml
+kompose down -f docker-compose-for-kubernetes.yml
+```
+
+You can access with your browser by `minikube service web`.
 
 ## Heroku Container Registry
 
