@@ -1,6 +1,6 @@
 # memo
 
-![screen_shot.png](https://raw.githubusercontent.com/kakakikikeke/memo/ver_golang/images/screen_shot.png)
+![screen_shot.png](https://raw.githubusercontent.com/kakakikikeke/memo/master/images/screen_shot.png)
 
 This is a sample application for docker-compose.  
 The "memo" is easy to save your memory wherever you want.  
@@ -31,15 +31,18 @@ If you haven't installed docker and docker-compose yet, first you should install
 
 You can access with your browser to "http://localhost/".
 
-### Heroku Container Registry
-* git clone https://github.com/kakakikikeke/memo.git
-* cd memo
-* git checkout -b ver_golang origin/ver_golang
-* heroku create -a memo-app-12345
-  * or `heroku git:remote --app memo-app-12345`
-* heroku addons:create heroku-redis:hobby-dev
-* heroku config:set REDIS_URL=redis://user:pass@ec2-00-000-000-000.compute-1.amazonaws.com:12345
-* heroku container:push web
-* heroku open
+## Heroku Container Registry
+
+```
+heroku container:login
+heroku create -a memo-app-12345
+(heroku git:remote -a memo-app-12345)
+docker build -f Dockerfile -t registry.heroku.com/memo-app-12345/web .
+docker push registry.heroku.com/memo-app-12345/web
+heroku addons:create heroku-redis:hobby-dev
+(heroku config:set REDIS_URL=redis://user:pass@ec2-00-000-000-000.compute-1.amazonaws.com:12345)
+heroku container:release web
+heroku open -a memo-app-12345
+```
 
 You can acces with your browser to "https://memo-app-12345.herokuapp.com/".
