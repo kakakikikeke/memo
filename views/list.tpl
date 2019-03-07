@@ -14,7 +14,7 @@
         </span>
         <div class="nav-right nav-menu">
           <span class="nav-item">
-            <a class="button is-primary is-inverted" href="https://github.com/kakakikikeke/memo/tree/ver_golang" target="_blank">
+            <a class="button is-primary is-inverted" href="https://github.com/kakakikikeke/memo" target="_blank">
               <span class="icon">
                 <i class="fa fa-github"></i>
               </span>
