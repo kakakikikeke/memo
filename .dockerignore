@@ -1,16 +1,13 @@
-# ruby
-.env
-.bundle
-vendor/bundle
-.ruby-version
+# project
+web-service.yaml
+redis-deployment.yaml
+web-deployment.yaml
+redis-service.yaml
+memo
 
 # git
 .git
 .gitignore
-
-# log
-log
-tmp
 
 # docker
 .dockerignore

@@ -1,11 +1,9 @@
-FROM golang
+FROM golang:1.17.0
 
-ADD ./ /go
+ADD ./ $GOPATH/src/github.com/kakakikikeke/memo
+WORKDIR $GOPATH/src/github.com/kakakikikeke/memo
 
-RUN go get -u github.com/go-redis/redis
-RUN go get github.com/astaxie/beego
-RUN go get github.com/astaxie/beego/logs
+RUN go mod tidy
+RUN go build
 
-RUN go build -o memo .
-
-CMD ["/go/memo"]
+CMD ["./memo"]

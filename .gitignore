@@ -2,3 +2,4 @@ web-service.yaml
 redis-deployment.yaml
 web-deployment.yaml
 redis-service.yaml
+memo

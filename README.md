@@ -12,13 +12,12 @@ The "memo" is connected to localhost:6379 redis-server.
 
 Install libraries.
 
-* go get -u github.com/go-redis/redis
-* go get github.com/astaxie/beego
-* go get github.com/astaxie/beego/logs
+* go mod tidy
 
-And run it.
+And build and run it.
 
-* go run memo.go
+* go build
+* ./memo
 
 You can access with your browser to "http://localhost:8080/".
 

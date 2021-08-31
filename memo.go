@@ -1,12 +1,12 @@
 package main
 
 import (
+	"github.com/beego/beego/v2/core/logs"
+	"github.com/beego/beego/v2/server/web"
+	"github.com/go-redis/redis"
 	"os"
 	"strconv"
 	"strings"
-	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/logs"
-	"github.com/go-redis/redis"
 )
 
 const KEY = "memo"
@@ -16,7 +16,7 @@ type Memo struct {
 }
 
 type MainController struct {
-	beego.Controller
+	web.Controller
 }
 
 func NewClient() (client *redis.Client) {
@@ -68,7 +68,7 @@ func (mc *MainController) Insert() {
 	mc.Redirect("/", 302)
 }
 
-func replace(str string, from string, to string)(out string){
+func replace(str string, from string, to string) (out string) {
 	return strings.Replace(str, from, to, -1)
 }
 
@@ -81,10 +81,10 @@ func main() {
 		}
 		port = cp
 	}
-	beego.BConfig.Listen.HTTPPort = port
-	beego.Router("/clear", new(MainController), "post:Clear")
-	beego.Router("/insert", new(MainController), "post:Insert")
-	beego.Router("/*", new(MainController), "*:List")
-	beego.AddFuncMap("rep", replace)
-	beego.Run()
+	web.BConfig.Listen.HTTPPort = port
+	web.Router("/clear", new(MainController), "post:Clear")
+	web.Router("/insert", new(MainController), "post:Insert")
+	web.Router("/*", new(MainController), "*:List")
+	web.AddFuncMap("rep", replace)
+	web.Run()
 }
