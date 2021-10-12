@@ -47,7 +47,9 @@ func (mc *MainController) List() {
 		mc.Data["name"] = name
 	}
 	logs.Debug(name)
-	memos, err := NewClient().LRange(key, 0, -1).Result()
+	cli := NewClient()
+	defer cli.Close()
+	memos, err := cli.LRange(key, 0, -1).Result()
 	if err != nil {
 		panic(err)
 	}
@@ -80,7 +82,9 @@ func (mc *MainController) Check() {
 	if err := mc.ParseForm(&u); err != nil {
 		panic(err)
 	}
-	pass, err := NewClient().Get(u.Name).Result()
+	cli := NewClient()
+	defer cli.Close()
+	pass, err := cli.Get(u.Name).Result()
 	if err != nil {
 		mc.Ctx.ResponseWriter.WriteHeader(403)
 		mc.Data["json"] = map[string]string{"msg": "User does not found."}
@@ -104,7 +108,9 @@ func (mc *MainController) Clear() {
 	if name != nil {
 		key = name.(string) + ":" + KEY
 	}
-	ret, err := NewClient().Del(key).Result()
+	cli := NewClient()
+	defer cli.Close()
+	ret, err := cli.Del(key).Result()
 	if err != nil {
 		panic(err)
 	}
@@ -122,7 +128,9 @@ func (mc *MainController) Insert() {
 	if name != nil {
 		key = name.(string) + ":" + KEY
 	}
-	size, err := NewClient().LPush(key, m.Msg).Result()
+	cli := NewClient()
+	defer cli.Close()
+	size, err := cli.LPush(key, m.Msg).Result()
 	if err != nil {
 		panic(err)
 	}
