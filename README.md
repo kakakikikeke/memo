@@ -16,6 +16,7 @@ Install libraries.
 
 And build and run it.
 
+* go fmt ./...
 * go build
 * ./memo
 

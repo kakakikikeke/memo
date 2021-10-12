@@ -2,7 +2,12 @@
 $(function() {
   $(document).ready(function() {
     $('#value,#values').val("");
+    $(".navbar-burger").click(function() {
+      $(".navbar-burger").toggleClass("is-active");
+      $(".navbar-menu").toggleClass("is-active");
+    });
   });
+
   $('#submit').click(function() {
     $('#submit').addClass('is-loading');
     var textType = "#value"
@@ -31,6 +36,37 @@ $(function() {
       }
     });
   });
+  $('#check').click(function() {
+    $('#check').addClass('is-loading');
+    var name = $('#name').val();
+    var pass = $('#pass').val();
+    $.ajax({
+      type: "POST",
+      url: "/check",
+      data: {
+        "name": name,
+        "pass": pass,
+      },
+      success: function(result) {
+        $('#check').removeClass('is-loading');
+        window.location.href = '/';
+      },
+      error: function(xhr, status, error) {
+        $('#check').removeClass('is-loading');
+        $('#msg').text($.parseJSON(xhr.responseText).msg);
+      }
+    });
+  });
+  $('#logout').click(function() {
+    $.ajax({
+      type: "POST",
+      url: "/logout",
+      success: function(result) {
+        window.location.href = '/';
+      }
+    });
+  });
+
   $('#value,#values').keyup(function() {
     if($(this).val().length != 0) {
       $('#submit').attr('disabled', false);

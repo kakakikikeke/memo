@@ -27,58 +27,28 @@
           </div>
         </div>
         <div class="navbar-end">
-          <div class="navbar-item">
-            {{ if .isLogin }}
-            <a class="button is-primary" id="logout" href="/logout">
-              <span>Logout ({{ .name }})</span>
-            </a>
-            {{ else }}
-            <a class="button is-primary" href="/login">
-              <span>Login</span>
-            </a>
-            {{ end }}
-          </div>
         </div>
       </div>
     </nav>
   </div>
   <div class="hero-body">
     <div class="container has-text-centered">
-      <h1 class="title">memo</h1>
-      <h2 class="subtitle">
-        Free note for Everyone.
-      </h2>
+      <h1 class="title">Login</h1>
       <div class="field">
         <p class="control">
-          <label class="checkbox">
-            <input type="checkbox" id="toggle">Textbox</input>
-          </label>
-        </p>
-      </div>
-      <div class="field">
-        <p class="control">
-          <input class="input" type="text" placeholder="something" id="value">
+          <input class="input" type="text" placeholder="username" id="name">
 	</p>
         <p class="control">
-          <textarea class="textarea" placeholder="some lines" id="values" style="display:none"></textarea>
-        </p>
+          <input class="input" type="password" id="pass">
+	</p>
       </div>
       <div class="field">
         <p class="control">
-          <button class="button is-info" id="submit" disabled>memo</button>
+          <button class="button is-info" id="check">Login</button>
         </p>
       </div>
-      {{ range $memo := .memos }}
-        {{ $replaced_memo := rep $memo "\n" "<br>" }}
-        <div>{{ str2html $replaced_memo }}</div>
-      {{ end }}
-    </div>
-  </div>
-  <div class="hero-foot">
-    <nav class="tabs is-centered">
-      <div class="container">
-        <a class="button is-danger" id="clear">Clear</a>
+      <div id="msg">
       </div>
-    </nav>
+    </div>
   </div>
 </section>
