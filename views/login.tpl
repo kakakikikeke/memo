@@ -39,7 +39,7 @@
           <input class="input" type="text" placeholder="username" id="name">
 	</p>
         <p class="control">
-          <input class="input" type="password" id="pass">
+          <input class="input" type="password" placeholder="password" id="pass">
 	</p>
       </div>
       <div class="field">
