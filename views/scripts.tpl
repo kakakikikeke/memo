@@ -66,6 +66,29 @@ $(function() {
       }
     });
   });
+  $('#create').click(function() {
+    $('#create').addClass('is-loading');
+    var name = $('#name').val();
+    var pass = $('#pass').val();
+    var pass2 = $('#pass2').val();
+    $.ajax({
+      type: "POST",
+      url: "/create",
+      data: {
+        "name": name,
+        "pass": pass,
+        "pass2": pass2,
+      },
+      success: function(result) {
+        $('#create').removeClass('is-loading');
+        window.location.href = '/';
+      },
+      error: function(xhr, status, error) {
+        $('#create').removeClass('is-loading');
+        $('#msg').text($.parseJSON(xhr.responseText).msg);
+      }
+    });
+  });
 
   $('#value,#values').keyup(function() {
     if($(this).val().length != 0) {

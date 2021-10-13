@@ -21,6 +21,12 @@ type User struct {
 	Pass string `form:"pass"`
 }
 
+type NewUser struct {
+	Name  string `form:"name"`
+	Pass  string `form:"pass"`
+	Pass2 string `form:"pass2"`
+}
+
 type MainController struct {
 	web.Controller
 }
@@ -70,6 +76,14 @@ func (mc *MainController) Login() {
 	mc.LayoutSections["Scripts"] = "scripts.tpl"
 }
 
+func (mc *MainController) SignUp() {
+	mc.Layout = "layout.tpl"
+	mc.TplName = "signup.tpl"
+	mc.LayoutSections = make(map[string]string)
+	mc.LayoutSections["Header"] = "header.tpl"
+	mc.LayoutSections["Scripts"] = "scripts.tpl"
+}
+
 func (mc *MainController) Logout() {
 	mc.Data["isLogin"] = false
 	mc.Data["name"] = nil
@@ -99,6 +113,38 @@ func (mc *MainController) Check() {
 		return
 	}
 	mc.SetSession("user", u.Name)
+	mc.TplName = "success.tpl"
+}
+
+func (mc *MainController) Create() {
+	newu := NewUser{}
+	if err := mc.ParseForm(&newu); err != nil {
+		panic(err)
+		return
+	}
+	cli := NewClient()
+	defer cli.Close()
+	err := cli.Get(newu.Name).Err()
+	if err == nil {
+		mc.Ctx.ResponseWriter.WriteHeader(403)
+		mc.Data["json"] = map[string]string{"msg": "Specified user already exists."}
+		mc.ServeJSON()
+		return
+	}
+
+	if newu.Pass != newu.Pass2 {
+		mc.Ctx.ResponseWriter.WriteHeader(403)
+		mc.Data["json"] = map[string]string{"msg": "Does not match password."}
+		mc.ServeJSON()
+		return
+	}
+	hash, err := bcrypt.GenerateFromPassword([]byte(newu.Pass), bcrypt.DefaultCost)
+	err = cli.Set(newu.Name, hash, 0).Err()
+	if err != nil {
+		panic(err)
+		return
+	}
+	mc.SetSession("user", newu.Name)
 	mc.TplName = "success.tpl"
 }
 
@@ -159,6 +205,8 @@ func main() {
 	web.Router("/login", new(MainController), "get:Login")
 	web.Router("/check", new(MainController), "post:Check")
 	web.Router("/logout", new(MainController), "post:Logout")
+	web.Router("/signup", new(MainController), "get:SignUp")
+	web.Router("/create", new(MainController), "post:Create")
 	web.AddFuncMap("rep", replace)
 	web.Run()
 }
