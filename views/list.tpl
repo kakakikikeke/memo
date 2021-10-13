@@ -33,6 +33,11 @@
               <span>Logout ({{ .name }})</span>
             </a>
           </div>
+          <div class="navbar-item">
+            <a class="button is-danger" id="signoff" href="/signoff">
+              <span>Delete user ({{ .name }})</span>
+            </a>
+          </div>
           {{ else }}
           <div class="navbar-item">
             <a class="button is-primary" href="/login">

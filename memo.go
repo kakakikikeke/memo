@@ -84,6 +84,19 @@ func (mc *MainController) SignUp() {
 	mc.LayoutSections["Scripts"] = "scripts.tpl"
 }
 
+func (mc *MainController) SignOff() {
+	name := mc.GetSession("user")
+	if name == nil {
+		mc.Redirect("/", 302)
+	}
+	mc.Data["name"] = name
+	mc.Layout = "layout.tpl"
+	mc.TplName = "signoff.tpl"
+	mc.LayoutSections = make(map[string]string)
+	mc.LayoutSections["Header"] = "header.tpl"
+	mc.LayoutSections["Scripts"] = "scripts.tpl"
+}
+
 func (mc *MainController) Logout() {
 	mc.Data["isLogin"] = false
 	mc.Data["name"] = nil
@@ -148,6 +161,35 @@ func (mc *MainController) Create() {
 	mc.TplName = "success.tpl"
 }
 
+func (mc *MainController) Delete() {
+	key := KEY
+	name := mc.GetSession("user")
+	if name != nil {
+		key = name.(string) + ":" + KEY
+	} else {
+		mc.Ctx.ResponseWriter.WriteHeader(403)
+		mc.Data["json"] = map[string]string{"msg": "Does not logged in."}
+		mc.ServeJSON()
+		return
+	}
+	cli := NewClient()
+	defer cli.Close()
+	err := cli.Del(key).Err()
+	if err != nil {
+		panic(err)
+		return
+	}
+	err = cli.Del(name.(string)).Err()
+	if err != nil {
+		panic(err)
+		return
+	}
+	mc.Data["isLogin"] = false
+	mc.Data["name"] = nil
+	mc.DelSession("user")
+	mc.TplName = "success.tpl"
+}
+
 func (mc *MainController) Clear() {
 	key := KEY
 	name := mc.GetSession("user")
@@ -207,6 +249,8 @@ func main() {
 	web.Router("/logout", new(MainController), "post:Logout")
 	web.Router("/signup", new(MainController), "get:SignUp")
 	web.Router("/create", new(MainController), "post:Create")
+	web.Router("/signoff", new(MainController), "get:SignOff")
+	web.Router("/delete", new(MainController), "post:Delete")
 	web.AddFuncMap("rep", replace)
 	web.Run()
 }

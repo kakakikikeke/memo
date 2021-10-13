@@ -89,6 +89,21 @@ $(function() {
       }
     });
   });
+  $('#delete').click(function() {
+    $('#delete').addClass('is-loading');
+    $.ajax({
+      type: "POST",
+      url: "/delete",
+      success: function(result) {
+        $('#delete').removeClass('is-loading');
+        window.location.href = '/';
+      },
+      error: function(xhr, status, error) {
+        $('#delete').removeClass('is-loading');
+        window.location.href = '/';
+      }
+    });
+  });
 
   $('#value,#values').keyup(function() {
     if($(this).val().length != 0) {
