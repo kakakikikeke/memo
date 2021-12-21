@@ -16,9 +16,7 @@ Install libraries.
 
 And build and run it.
 
-* go fmt ./...
-* go build
-* ./memo
+* go fmt ./... && go build && ./memo
 
 You can access with your browser to "http://localhost:8080/".
 
