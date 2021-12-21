@@ -11,6 +11,7 @@ import (
 )
 
 const KEY = "memo"
+const IMAGE_KEY = "image"
 
 type Memo struct {
 	Msg string `form:"msg"`
@@ -226,6 +227,30 @@ func (mc *MainController) Insert() {
 	mc.Redirect("/", 302)
 }
 
+func (mc *MainController) ListImage() {
+	key := KEY
+	name := mc.GetSession("user")
+	if name != nil {
+		key = name.(string) + ":" + KEY
+		mc.Data["isLogin"] = true
+		mc.Data["name"] = name
+	}
+	logs.Debug(name)
+	cli := NewClient()
+	defer cli.Close()
+	images, err := cli.LRange(key, 0, -1).Result()
+	if err != nil {
+		panic(err)
+	}
+	logs.Debug(images)
+	mc.Layout = "layout.tpl"
+	mc.TplName = "board.tpl"
+	mc.LayoutSections = make(map[string]string)
+	mc.LayoutSections["Header"] = "header.tpl"
+	mc.LayoutSections["Scripts"] = "scripts.tpl"
+	mc.Data["images"] = images
+}
+
 func replace(str string, from string, to string) (out string) {
 	return strings.Replace(str, from, to, -1)
 }
@@ -251,6 +276,7 @@ func main() {
 	web.Router("/create", new(MainController), "post:Create")
 	web.Router("/signoff", new(MainController), "get:SignOff")
 	web.Router("/delete", new(MainController), "post:Delete")
+	web.Router("/image", new(MainController), "*:ListImage")
 	web.AddFuncMap("rep", replace)
 	web.Run()
 }

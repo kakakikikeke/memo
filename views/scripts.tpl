@@ -1,4 +1,5 @@
 <script type="text/javascript">
+// for memo
 $(function() {
   $(document).ready(function() {
     $('#value,#values').val("");
@@ -127,4 +128,28 @@ $(function() {
     }
   });
 });
+// for board
+var board = new DrawingBoard.Board('board', {
+  background: "#ffffff",
+  color: "#000000",
+  size: 30,
+  fillTolerance: 150,
+  controls: [
+    { Size: { type: "range", min: 12, max: 42 } },
+    { Navigation: { back: true, forward: true } },
+    'DrawingMode',
+    'Color'
+  ],
+  webStorage: 'local',
+  droppable: true
+});
+board.addControl('Download');
+board.downloadImg = function() {
+  var img = this.getImg();
+  img = img.replace("image/png", "image/octet-stream");
+  var link = document.createElement('a');
+  link.download = "download.png";
+  link.href = img;
+  link.click();
+};
 </script>
