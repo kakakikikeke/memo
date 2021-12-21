@@ -152,4 +152,34 @@ board.downloadImg = function() {
   link.href = img;
   link.click();
 };
+$('#save').click(function() {
+  $('#save').addClass('is-loading');
+  // Error parsing request body:invalid semicolon separator in query
+  var img = board.getImg().replace('data:image/png;base64,', '');
+  $.ajax({
+    type: "POST",
+    url: "/save",
+    enctype: 'application/x-www-form-urlencoded',
+    data: "image=" + img,
+    success: function(msg){
+      $('#save').removeClass('is-loading');
+      window.location.href = '/image';
+    },
+    error: function(xhr, status, err) {
+      $('#save').removeClass('is-loading');
+      window.location.href = '/image';
+    }
+  });
+});
+$('#clear_img').click(function() {
+  $('#clear_img').addClass('is-loading');
+  $.ajax({
+    type: "POST",
+    url: "/clear_img",
+    success: function(result) {
+      $('#clear_img').removeClass('is-loading');
+      window.location.href = '/image';
+    }
+  });
+});
 </script>

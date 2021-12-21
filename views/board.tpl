@@ -66,12 +66,36 @@
         Free board for Everyone.
       </h2>
       <div id="board"></div>
+      <div class="field">
+        <p class="control">
+          <button class="button is-info" id="save">Save</button>
+        </p>
+      </div>
+      {{ $end := 0 }}
+      {{ range $i, $image := .images }}
+        {{ if is_first $i }}
+        {{ $end = 1 }}
+        <div class="columns">
+        {{ end }}
+          <div class="column is-3">
+            <figure class="image">
+              <img src="data:image/png;base64,{{ $image }}">
+            </figure>
+          </div>
+        {{ if is_end $i }}
+        {{ $end = 0 }}
+        </div>
+        {{ end }}
+      {{ end }}
+      {{ if ne $end 0 }}
+      </div>
+      {{ end }}
     </div>
   </div>
   <div class="hero-foot">
     <nav class="tabs is-centered">
       <div class="container">
-        <a class="button is-danger" id="clear">Clear</a>
+        <a class="button is-danger" id="clear_img">Clear</a>
       </div>
     </nav>
   </div>

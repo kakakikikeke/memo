@@ -17,6 +17,10 @@ type Memo struct {
 	Msg string `form:"msg"`
 }
 
+type Image struct {
+	Base64Img string `form:"image"`
+}
+
 type User struct {
 	Name string `form:"name"`
 	Pass string `form:"pass"`
@@ -228,10 +232,10 @@ func (mc *MainController) Insert() {
 }
 
 func (mc *MainController) ListImage() {
-	key := KEY
+	key := IMAGE_KEY
 	name := mc.GetSession("user")
 	if name != nil {
-		key = name.(string) + ":" + KEY
+		key = name.(string) + ":" + IMAGE_KEY
 		mc.Data["isLogin"] = true
 		mc.Data["name"] = name
 	}
@@ -242,7 +246,7 @@ func (mc *MainController) ListImage() {
 	if err != nil {
 		panic(err)
 	}
-	logs.Debug(images)
+	logs.Debug(len(images))
 	mc.Layout = "layout.tpl"
 	mc.TplName = "board.tpl"
 	mc.LayoutSections = make(map[string]string)
@@ -251,8 +255,53 @@ func (mc *MainController) ListImage() {
 	mc.Data["images"] = images
 }
 
+func (mc *MainController) Save() {
+	img := Image{}
+	if err := mc.ParseForm(&img); err != nil {
+		panic(err)
+	}
+	key := IMAGE_KEY
+	name := mc.GetSession("user")
+	if name != nil {
+		key = name.(string) + ":" + IMAGE_KEY
+	}
+	cli := NewClient()
+	defer cli.Close()
+	replaced_img := replace(img.Base64Img, " ", "+")
+	size, err := cli.LPush(key, replaced_img).Result()
+	if err != nil {
+		panic(err)
+	}
+	logs.Debug(size)
+	mc.Redirect("/image", 302)
+}
+
+func (mc *MainController) ClearImage() {
+	key := IMAGE_KEY
+	name := mc.GetSession("user")
+	if name != nil {
+		key = name.(string) + ":" + IMAGE_KEY
+	}
+	cli := NewClient()
+	defer cli.Close()
+	ret, err := cli.Del(key).Result()
+	if err != nil {
+		panic(err)
+	}
+	logs.Debug(ret)
+	mc.Redirect("/image", 302)
+}
+
 func replace(str string, from string, to string) (out string) {
 	return strings.Replace(str, from, to, -1)
+}
+
+func is_first(index int) (flag bool) {
+	return index%4 == 0
+}
+
+func is_end(index int) (flag bool) {
+	return (index+1)%4 == 0
 }
 
 func main() {
@@ -276,7 +325,11 @@ func main() {
 	web.Router("/create", new(MainController), "post:Create")
 	web.Router("/signoff", new(MainController), "get:SignOff")
 	web.Router("/delete", new(MainController), "post:Delete")
-	web.Router("/image", new(MainController), "*:ListImage")
+	web.Router("/image", new(MainController), "get:ListImage")
+	web.Router("/save", new(MainController), "post:Save")
+	web.Router("/clear_img", new(MainController), "post:ClearImage")
 	web.AddFuncMap("rep", replace)
+	web.AddFuncMap("is_first", is_first)
+	web.AddFuncMap("is_end", is_end)
 	web.Run()
 }
