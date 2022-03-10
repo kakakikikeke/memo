@@ -5,6 +5,7 @@ import (
 	"github.com/beego/beego/v2/server/web"
 	"github.com/go-redis/redis"
 	"golang.org/x/crypto/bcrypt"
+	"html/template"
 	"os"
 	"strconv"
 	"strings"
@@ -12,6 +13,7 @@ import (
 
 const KEY = "memo"
 const IMAGE_KEY = "image"
+const FILE_KEY = "file"
 
 type Memo struct {
 	Msg string `form:"msg"`
@@ -19,6 +21,11 @@ type Memo struct {
 
 type Image struct {
 	Base64Img string `form:"image"`
+}
+
+type File struct {
+	Base64File string `form:"base64str"`
+	Filename   string `form:"filename"`
 }
 
 type User struct {
@@ -71,6 +78,67 @@ func (mc *MainController) List() {
 	mc.LayoutSections["Header"] = "header.tpl"
 	mc.LayoutSections["Scripts"] = "scripts.tpl"
 	mc.Data["memos"] = memos
+}
+
+func (mc *MainController) ListFile() {
+	key := FILE_KEY
+	name := mc.GetSession("user")
+	if name != nil {
+		key = name.(string) + ":" + FILE_KEY
+		mc.Data["isLogin"] = true
+		mc.Data["name"] = name
+	}
+	logs.Debug(name)
+	cli := NewClient()
+	defer cli.Close()
+	files, err := cli.LRange(key, 0, -1).Result()
+	if err != nil {
+		panic(err)
+	}
+	logs.Debug(len(files))
+	mc.Layout = "layout.tpl"
+	mc.TplName = "list_file.tpl"
+	mc.LayoutSections = make(map[string]string)
+	mc.LayoutSections["Header"] = "header.tpl"
+	mc.LayoutSections["Scripts"] = "scripts.tpl"
+	mc.Data["files"] = files
+}
+
+func (mc *MainController) Upload() {
+	file := File{}
+	if err := mc.ParseForm(&file); err != nil {
+		panic(err)
+	}
+	key := FILE_KEY
+	name := mc.GetSession("user")
+	if name != nil {
+		key = name.(string) + ":" + FILE_KEY
+	}
+	cli := NewClient()
+	defer cli.Close()
+	replaced_file := replace(file.Base64File, " ", "+")
+	size, err := cli.LPush(key, replaced_file+"^_^"+file.Filename).Result()
+	if err != nil {
+		panic(err)
+	}
+	logs.Debug(size)
+	mc.Redirect("/file", 302)
+}
+
+func (mc *MainController) ClearFile() {
+	key := FILE_KEY
+	name := mc.GetSession("user")
+	if name != nil {
+		key = name.(string) + ":" + FILE_KEY
+	}
+	cli := NewClient()
+	defer cli.Close()
+	ret, err := cli.Del(key).Result()
+	if err != nil {
+		panic(err)
+	}
+	logs.Debug(ret)
+	mc.Redirect("/file", 302)
 }
 
 func (mc *MainController) Login() {
@@ -304,6 +372,24 @@ func is_end(index int) (flag bool) {
 	return (index+1)%4 == 0
 }
 
+func get_file_name(file_info string) (filename string) {
+	file_info_list := strings.Split(file_info, "^_^")
+	return file_info_list[len(file_info_list)-1]
+}
+
+func get_content(file_info string) (content string) {
+	file_info_list := strings.Split(file_info, "^_^")
+	return "href=" + file_info_list[0]
+}
+
+func attr(s string) template.HTMLAttr {
+	return template.HTMLAttr(s)
+}
+
+func safe(s string) template.HTML {
+	return template.HTML(s)
+}
+
 func main() {
 	port := 8080
 	if p := os.Getenv("PORT"); p != "" {
@@ -315,9 +401,11 @@ func main() {
 	}
 	web.BConfig.Listen.HTTPPort = port
 	web.BConfig.WebConfig.Session.SessionOn = true
+	// for memo
 	web.Router("/clear", new(MainController), "post:Clear")
 	web.Router("/insert", new(MainController), "post:Insert")
 	web.Router("/", new(MainController), "*:List")
+	// for user
 	web.Router("/login", new(MainController), "get:Login")
 	web.Router("/check", new(MainController), "post:Check")
 	web.Router("/logout", new(MainController), "post:Logout")
@@ -325,11 +413,20 @@ func main() {
 	web.Router("/create", new(MainController), "post:Create")
 	web.Router("/signoff", new(MainController), "get:SignOff")
 	web.Router("/delete", new(MainController), "post:Delete")
+	// for fiile
 	web.Router("/image", new(MainController), "get:ListImage")
 	web.Router("/save", new(MainController), "post:Save")
 	web.Router("/clear_img", new(MainController), "post:ClearImage")
+	// for fiile
+	web.Router("/file", new(MainController), "get:ListFile")
+	web.Router("/upload", new(MainController), "post:Upload")
+	web.Router("/clear_file", new(MainController), "post:ClearFile")
 	web.AddFuncMap("rep", replace)
 	web.AddFuncMap("is_first", is_first)
 	web.AddFuncMap("is_end", is_end)
+	web.AddFuncMap("get_file_name", get_file_name)
+	web.AddFuncMap("get_content", get_content)
+	web.AddFuncMap("safe", safe)
+	web.AddFuncMap("attr", attr)
 	web.Run()
 }

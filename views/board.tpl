@@ -21,6 +21,11 @@
             </a>
           </div>
           <div class="navbar-item">
+            <a class="button is-primary" href="/file">
+              <span>File</span>
+            </a>
+          </div>
+          <div class="navbar-item">
             <div class="buttons">
               <a class="button is-primary is-inverted" href="https://github.com/kakakikikeke/memo" target="_blank">
                 <span class="icon">
@@ -66,7 +71,7 @@
         Free board for Everyone.
       </h2>
       <div id="board"></div>
-      <div class="field">
+      <div class="field mt-3">
         <p class="control">
           <button class="button is-info" id="save">Save</button>
         </p>

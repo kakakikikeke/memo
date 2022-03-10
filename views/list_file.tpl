@@ -66,40 +66,40 @@
   </div>
   <div class="hero-body">
     <div class="container has-text-centered">
-      <h1 class="title">memo</h1>
+      <h1 class="title">file</h1>
       <h2 class="subtitle">
-        Free note for Everyone.
+        Free files for Everyone.
       </h2>
-      <div class="field">
+      <div class="file has-name is-fullwidth">
+        <label class="file-label">
+          <input class="file-input" id="upload_file" type="file" name="file">
+          <span class="file-cta">
+            <span class="file-icon">
+              <i class="fa fa-upload"></i>
+            </span>
+            <span class="file-label">
+              Choose a file…
+            </span>
+          </span>
+          <span class="file-name" id="file_name">
+          </span>
+        </label>
+      </div>
+      <div class="field mt-3">
         <p class="control">
-          <label class="checkbox">
-            <input type="checkbox" id="toggle">Textbox</input>
-          </label>
+          <button class="button is-info" id="upload" disabled>Upload</button>
         </p>
       </div>
-      <div class="field">
-        <p class="control">
-          <input class="input" type="text" placeholder="something" id="value">
-	</p>
-        <p class="control">
-          <textarea class="textarea" placeholder="some lines" id="values" style="display:none"></textarea>
-        </p>
-      </div>
-      <div class="field">
-        <p class="control">
-          <button class="button is-info" id="submit" disabled>memo</button>
-        </p>
-      </div>
-      {{ range $memo := .memos }}
-        {{ $replaced_memo := rep $memo "\n" "<br>" }}
-        <div>{{ str2html $replaced_memo }}</div>
+      {{ range $file := .files }}
+        {{ $content := get_content $file }}
+        <div><a download="{{ get_file_name $file }}" {{ $content | attr }}>{{ get_file_name $file }}</a></div>
       {{ end }}
     </div>
   </div>
   <div class="hero-foot">
     <nav class="tabs is-centered">
       <div class="container">
-        <a class="button is-danger" id="clear">Clear</a>
+        <a class="button is-danger" id="clear_file">Clear</a>
       </div>
     </nav>
   </div>
