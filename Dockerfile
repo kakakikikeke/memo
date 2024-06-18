@@ -1,4 +1,4 @@
-FROM golang:1.17.0
+FROM golang:1.22.4-alpine3.20
 
 ADD ./ $GOPATH/src/github.com/kakakikikeke/memo
 WORKDIR $GOPATH/src/github.com/kakakikikeke/memo
