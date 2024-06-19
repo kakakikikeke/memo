@@ -16,16 +16,21 @@ $('#submit').click(function() {
     textType = "#values"
   }
   var value = $(textType).val();
-  $.ajax({
-    type: "POST",
-    url: "/insert",
-    data: {
-      "msg": value
-    },
-    success: function(result){
-      location.reload();
-    }
-  });
+  if (value.length >= 100) {
+    $('#warning').css("color", "#f14668").text("Must be 100 characters or less.")
+    $('#submit').removeClass('is-loading');
+  } else {
+    $.ajax({
+      type: "POST",
+      url: "/insert",
+      data: {
+        "msg": value
+      },
+      success: function(result){
+        location.reload();
+      }
+    });
+  }
 });
 $('#clear').click(function() {
   $('#clear').addClass('is-loading');

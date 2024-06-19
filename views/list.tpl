@@ -85,6 +85,7 @@
           <textarea class="textarea" placeholder="some lines" id="values" style="display:none"></textarea>
         </p>
       </div>
+      <div id="warning"></div>
       <div class="field">
         <p class="control">
           <button class="button is-info" id="submit" disabled>memo</button>
