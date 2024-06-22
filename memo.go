@@ -56,14 +56,15 @@ func NewClient() (client *redis.Client) {
 	return client
 }
 
-func (mc *MainController) List() {
-	key := KEY
+func (mc *MainController) ListText() {
 	name := mc.GetSession("user")
-	if name != nil {
-		key = name.(string) + ":" + KEY
+	if name == nil {
+		name = "anonymous"
+	} else {
 		mc.Data["isLogin"] = true
 		mc.Data["name"] = name
 	}
+	key := name.(string) + ":" + KEY
 	logs.Debug(name)
 	cli := NewClient()
 	defer cli.Close()
@@ -72,22 +73,132 @@ func (mc *MainController) List() {
 		panic(err)
 	}
 	logs.Debug(memos)
-	mc.Layout = "layout.tpl"
-	mc.TplName = "list.tpl"
+	mc.Layout = "meta/layout.tpl"
+	mc.TplName = "text.tpl"
 	mc.LayoutSections = make(map[string]string)
-	mc.LayoutSections["Header"] = "header.tpl"
-	mc.LayoutSections["Scripts"] = "scripts.tpl"
+	mc.LayoutSections["Header"] = "meta/header.tpl"
+	mc.LayoutSections["Scripts"] = "meta/scripts.tpl"
 	mc.Data["memos"] = memos
 }
 
-func (mc *MainController) ListFile() {
-	key := FILE_KEY
+func (mc *MainController) SaveText() {
 	name := mc.GetSession("user")
-	if name != nil {
-		key = name.(string) + ":" + FILE_KEY
+	if name == nil {
+		name = "anonymous"
+	}
+	key := name.(string) + ":" + KEY
+	m := Memo{}
+	if err := mc.ParseForm(&m); err != nil {
+		panic(err)
+	}
+	cli := NewClient()
+	defer cli.Close()
+	texts, _ := cli.LRange(key, 0, -1).Result()
+	if len(texts) > 9 {
+		mc.Ctx.ResponseWriter.WriteHeader(403)
+		mc.Data["json"] = map[string]string{"msg": "Exceeds the number of texts that can be uploaded."}
+		mc.ServeJSON()
+		return
+	}
+	size, err := cli.LPush(key, m.Msg).Result()
+	if err != nil {
+		panic(err)
+	}
+	logs.Debug(size)
+	mc.Redirect("/", 302)
+}
+
+func (mc *MainController) ClearText() {
+	name := mc.GetSession("user")
+	if name == nil {
+		name = "anonymous"
+	}
+	key := name.(string) + ":" + KEY
+	cli := NewClient()
+	defer cli.Close()
+	ret, err := cli.Del(key).Result()
+	if err != nil {
+		panic(err)
+	}
+	logs.Debug(ret)
+	mc.Redirect("/", 302)
+}
+
+func (mc *MainController) ListImage() {
+	name := mc.GetSession("user")
+	if name == nil {
+		name = "anonymous"
+	}
+	key := name.(string) + ":" + IMAGE_KEY
+	logs.Debug(name)
+	cli := NewClient()
+	defer cli.Close()
+	images, err := cli.LRange(key, 0, -1).Result()
+	if err != nil {
+		panic(err)
+	}
+	logs.Debug(len(images))
+	mc.Layout = "meta/layout.tpl"
+	mc.TplName = "image.tpl"
+	mc.LayoutSections = make(map[string]string)
+	mc.LayoutSections["Header"] = "meta/header.tpl"
+	mc.LayoutSections["Scripts"] = "meta/scripts.tpl"
+	mc.Data["images"] = images
+}
+
+func (mc *MainController) SaveImage() {
+	name := mc.GetSession("user")
+	if name == nil {
+		name = "anonymous"
+	}
+	key := name.(string) + ":" + IMAGE_KEY
+	img := Image{}
+	if err := mc.ParseForm(&img); err != nil {
+		panic(err)
+	}
+	cli := NewClient()
+	defer cli.Close()
+	images, _ := cli.LRange(key, 0, -1).Result()
+	if len(images) > 0 {
+		mc.Ctx.ResponseWriter.WriteHeader(403)
+		mc.Data["json"] = map[string]string{"msg": "Exceeds the number of images that can be uploaded."}
+		mc.ServeJSON()
+		return
+	}
+	replaced_img := replace(img.Base64Img, " ", "+")
+	size, err := cli.LPush(key, replaced_img).Result()
+	if err != nil {
+		panic(err)
+	}
+	logs.Debug(size)
+	mc.Redirect("/image", 302)
+}
+
+func (mc *MainController) ClearImage() {
+	name := mc.GetSession("user")
+	if name == nil {
+		name = "anonymous"
+	}
+	key := name.(string) + ":" + IMAGE_KEY
+	cli := NewClient()
+	defer cli.Close()
+	ret, err := cli.Del(key).Result()
+	if err != nil {
+		panic(err)
+	}
+	logs.Debug(ret)
+	mc.Redirect("/image", 302)
+}
+
+func (mc *MainController) ListFile() {
+	name := mc.GetSession("user")
+	if name == nil {
+		name = "anonymous"
+	} else {
 		mc.Data["isLogin"] = true
 		mc.Data["name"] = name
 	}
+	key := name.(string) + ":" + FILE_KEY
 	logs.Debug(name)
 	cli := NewClient()
 	defer cli.Close()
@@ -96,26 +207,33 @@ func (mc *MainController) ListFile() {
 		panic(err)
 	}
 	logs.Debug(len(files))
-	mc.Layout = "layout.tpl"
-	mc.TplName = "list_file.tpl"
+	mc.Layout = "meta/layout.tpl"
+	mc.TplName = "file.tpl"
 	mc.LayoutSections = make(map[string]string)
-	mc.LayoutSections["Header"] = "header.tpl"
-	mc.LayoutSections["Scripts"] = "scripts.tpl"
+	mc.LayoutSections["Header"] = "meta/header.tpl"
+	mc.LayoutSections["Scripts"] = "meta/scripts.tpl"
 	mc.Data["files"] = files
 }
 
-func (mc *MainController) Upload() {
+func (mc *MainController) SaveFile() {
+	name := mc.GetSession("user")
+	if name == nil {
+		name = "anonymous"
+	}
+	key := name.(string) + ":" + FILE_KEY
 	file := File{}
 	if err := mc.ParseForm(&file); err != nil {
 		panic(err)
 	}
-	key := FILE_KEY
-	name := mc.GetSession("user")
-	if name != nil {
-		key = name.(string) + ":" + FILE_KEY
-	}
 	cli := NewClient()
 	defer cli.Close()
+	files, _ := cli.LRange(key, 0, -1).Result()
+	if len(files) > 0 {
+		mc.Ctx.ResponseWriter.WriteHeader(403)
+		mc.Data["json"] = map[string]string{"msg": "Exceeds the number of files that can be uploaded."}
+		mc.ServeJSON()
+		return
+	}
 	replaced_file := replace(file.Base64File, " ", "+")
 	size, err := cli.LPush(key, replaced_file+"^_^"+file.Filename).Result()
 	if err != nil {
@@ -126,11 +244,11 @@ func (mc *MainController) Upload() {
 }
 
 func (mc *MainController) ClearFile() {
-	key := FILE_KEY
 	name := mc.GetSession("user")
-	if name != nil {
-		key = name.(string) + ":" + FILE_KEY
+	if name == nil {
+		name = "anonymous"
 	}
+	key := name.(string) + ":" + FILE_KEY
 	cli := NewClient()
 	defer cli.Close()
 	ret, err := cli.Del(key).Result()
@@ -142,19 +260,19 @@ func (mc *MainController) ClearFile() {
 }
 
 func (mc *MainController) Login() {
-	mc.Layout = "layout.tpl"
-	mc.TplName = "login.tpl"
+	mc.Layout = "meta/layout.tpl"
+	mc.TplName = "account/login.tpl"
 	mc.LayoutSections = make(map[string]string)
-	mc.LayoutSections["Header"] = "header.tpl"
-	mc.LayoutSections["Scripts"] = "scripts.tpl"
+	mc.LayoutSections["Header"] = "meta/header.tpl"
+	mc.LayoutSections["Scripts"] = "meta/scripts.tpl"
 }
 
 func (mc *MainController) SignUp() {
-	mc.Layout = "layout.tpl"
-	mc.TplName = "signup.tpl"
+	mc.Layout = "meta/layout.tpl"
+	mc.TplName = "account/signup.tpl"
 	mc.LayoutSections = make(map[string]string)
-	mc.LayoutSections["Header"] = "header.tpl"
-	mc.LayoutSections["Scripts"] = "scripts.tpl"
+	mc.LayoutSections["Header"] = "meta/header.tpl"
+	mc.LayoutSections["Scripts"] = "meta/scripts.tpl"
 }
 
 func (mc *MainController) SignOff() {
@@ -163,18 +281,18 @@ func (mc *MainController) SignOff() {
 		mc.Redirect("/", 302)
 	}
 	mc.Data["name"] = name
-	mc.Layout = "layout.tpl"
-	mc.TplName = "signoff.tpl"
+	mc.Layout = "meta/layout.tpl"
+	mc.TplName = "account/signoff.tpl"
 	mc.LayoutSections = make(map[string]string)
-	mc.LayoutSections["Header"] = "header.tpl"
-	mc.LayoutSections["Scripts"] = "scripts.tpl"
+	mc.LayoutSections["Header"] = "meta/header.tpl"
+	mc.LayoutSections["Scripts"] = "meta/scripts.tpl"
 }
 
 func (mc *MainController) Logout() {
 	mc.Data["isLogin"] = false
 	mc.Data["name"] = nil
 	mc.DelSession("user")
-	mc.TplName = "success.tpl"
+	mc.TplName = "account/success.tpl"
 }
 
 func (mc *MainController) Check() {
@@ -199,7 +317,7 @@ func (mc *MainController) Check() {
 		return
 	}
 	mc.SetSession("user", u.Name)
-	mc.TplName = "success.tpl"
+	mc.TplName = "account/success.tpl"
 }
 
 func (mc *MainController) Create() {
@@ -231,23 +349,33 @@ func (mc *MainController) Create() {
 		return
 	}
 	mc.SetSession("user", newu.Name)
-	mc.TplName = "success.tpl"
+	mc.TplName = "account/success.tpl"
 }
 
 func (mc *MainController) Delete() {
-	key := KEY
 	name := mc.GetSession("user")
-	if name != nil {
-		key = name.(string) + ":" + KEY
-	} else {
+	if name == nil {
 		mc.Ctx.ResponseWriter.WriteHeader(403)
 		mc.Data["json"] = map[string]string{"msg": "Does not logged in."}
 		mc.ServeJSON()
 		return
 	}
+	key := name.(string) + ":" + KEY
+	key_file := name.(string) + ":" + FILE_KEY
+	key_image := name.(string) + ":" + IMAGE_KEY
 	cli := NewClient()
 	defer cli.Close()
 	err := cli.Del(key).Err()
+	if err != nil {
+		panic(err)
+		return
+	}
+	err = cli.Del(key_file).Err()
+	if err != nil {
+		panic(err)
+		return
+	}
+	err = cli.Del(key_image).Err()
 	if err != nil {
 		panic(err)
 		return
@@ -260,104 +388,7 @@ func (mc *MainController) Delete() {
 	mc.Data["isLogin"] = false
 	mc.Data["name"] = nil
 	mc.DelSession("user")
-	mc.TplName = "success.tpl"
-}
-
-func (mc *MainController) Clear() {
-	key := KEY
-	name := mc.GetSession("user")
-	if name != nil {
-		key = name.(string) + ":" + KEY
-	}
-	cli := NewClient()
-	defer cli.Close()
-	ret, err := cli.Del(key).Result()
-	if err != nil {
-		panic(err)
-	}
-	logs.Debug(ret)
-	mc.Redirect("/", 302)
-}
-
-func (mc *MainController) Insert() {
-	m := Memo{}
-	if err := mc.ParseForm(&m); err != nil {
-		panic(err)
-	}
-	key := KEY
-	name := mc.GetSession("user")
-	if name != nil {
-		key = name.(string) + ":" + KEY
-	}
-	cli := NewClient()
-	defer cli.Close()
-	size, err := cli.LPush(key, m.Msg).Result()
-	if err != nil {
-		panic(err)
-	}
-	logs.Debug(size)
-	mc.Redirect("/", 302)
-}
-
-func (mc *MainController) ListImage() {
-	key := IMAGE_KEY
-	name := mc.GetSession("user")
-	if name != nil {
-		key = name.(string) + ":" + IMAGE_KEY
-		mc.Data["isLogin"] = true
-		mc.Data["name"] = name
-	}
-	logs.Debug(name)
-	cli := NewClient()
-	defer cli.Close()
-	images, err := cli.LRange(key, 0, -1).Result()
-	if err != nil {
-		panic(err)
-	}
-	logs.Debug(len(images))
-	mc.Layout = "layout.tpl"
-	mc.TplName = "board.tpl"
-	mc.LayoutSections = make(map[string]string)
-	mc.LayoutSections["Header"] = "header.tpl"
-	mc.LayoutSections["Scripts"] = "scripts.tpl"
-	mc.Data["images"] = images
-}
-
-func (mc *MainController) Save() {
-	img := Image{}
-	if err := mc.ParseForm(&img); err != nil {
-		panic(err)
-	}
-	key := IMAGE_KEY
-	name := mc.GetSession("user")
-	if name != nil {
-		key = name.(string) + ":" + IMAGE_KEY
-	}
-	cli := NewClient()
-	defer cli.Close()
-	replaced_img := replace(img.Base64Img, " ", "+")
-	size, err := cli.LPush(key, replaced_img).Result()
-	if err != nil {
-		panic(err)
-	}
-	logs.Debug(size)
-	mc.Redirect("/image", 302)
-}
-
-func (mc *MainController) ClearImage() {
-	key := IMAGE_KEY
-	name := mc.GetSession("user")
-	if name != nil {
-		key = name.(string) + ":" + IMAGE_KEY
-	}
-	cli := NewClient()
-	defer cli.Close()
-	ret, err := cli.Del(key).Result()
-	if err != nil {
-		panic(err)
-	}
-	logs.Debug(ret)
-	mc.Redirect("/image", 302)
+	mc.TplName = "account/success.tpl"
 }
 
 func replace(str string, from string, to string) (out string) {
@@ -402,10 +433,18 @@ func main() {
 	web.BConfig.Listen.HTTPPort = port
 	web.BConfig.WebConfig.Session.SessionOn = true
 	// for memo
-	web.Router("/clear", new(MainController), "post:Clear")
-	web.Router("/insert", new(MainController), "post:Insert")
-	web.Router("/", new(MainController), "*:List")
-	// for user
+	web.Router("/", new(MainController), "*:ListText")
+	web.Router("/insert", new(MainController), "post:SaveText")
+	web.Router("/clear", new(MainController), "post:ClearText")
+	// for image
+	web.Router("/image", new(MainController), "get:ListImage")
+	web.Router("/save", new(MainController), "post:SaveImage")
+	web.Router("/clear_img", new(MainController), "post:ClearImage")
+	// for file
+	web.Router("/file", new(MainController), "get:ListFile")
+	web.Router("/upload", new(MainController), "post:SaveFile")
+	web.Router("/clear_file", new(MainController), "post:ClearFile")
+	// for user management
 	web.Router("/login", new(MainController), "get:Login")
 	web.Router("/check", new(MainController), "post:Check")
 	web.Router("/logout", new(MainController), "post:Logout")
@@ -413,14 +452,7 @@ func main() {
 	web.Router("/create", new(MainController), "post:Create")
 	web.Router("/signoff", new(MainController), "get:SignOff")
 	web.Router("/delete", new(MainController), "post:Delete")
-	// for fiile
-	web.Router("/image", new(MainController), "get:ListImage")
-	web.Router("/save", new(MainController), "post:Save")
-	web.Router("/clear_img", new(MainController), "post:ClearImage")
-	// for fiile
-	web.Router("/file", new(MainController), "get:ListFile")
-	web.Router("/upload", new(MainController), "post:Upload")
-	web.Router("/clear_file", new(MainController), "post:ClearFile")
+	// for template functions
 	web.AddFuncMap("rep", replace)
 	web.AddFuncMap("is_first", is_first)
 	web.AddFuncMap("is_end", is_end)

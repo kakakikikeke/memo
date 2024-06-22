@@ -28,6 +28,10 @@ $('#submit').click(function() {
       },
       success: function(result){
         location.reload();
+      },
+      error: function(xhr, status, error) {
+        $('#submit').removeClass('is-loading');
+        $('#warning').text($.parseJSON(xhr.responseText).msg);
       }
     });
   }
@@ -88,6 +92,10 @@ $('#upload').click(function() {
         cache: false,
         success: function(result) {
           location.reload();
+        },
+        error: function(xhr, status, error) {
+          $('#upload').removeClass('is-loading');
+          $('#msg').text($.parseJSON(xhr.responseText).msg);
         }
       });
     }, false);
@@ -220,9 +228,9 @@ $('#save').click(function() {
       $('#save').removeClass('is-loading');
       window.location.href = '/image';
     },
-    error: function(xhr, status, err) {
+    error: function(xhr, status, error) {
       $('#save').removeClass('is-loading');
-      window.location.href = '/image';
+      $('#msg').text($.parseJSON(xhr.responseText).msg);
     }
   });
 });
