@@ -43,6 +43,10 @@ type MainController struct {
 	web.Controller
 }
 
+type ErrorController struct {
+	web.Controller
+}
+
 func NewClient() (client *redis.Client) {
 	redisURL := "redis://localhost:6379/0"
 	if url := os.Getenv("REDIS_URL"); url != "" {
@@ -391,6 +395,14 @@ func (mc *MainController) Delete() {
 	mc.TplName = "account/success.tpl"
 }
 
+func (ec *ErrorController) Error404() {
+	ec.Layout = "meta/layout.tpl"
+	ec.TplName = "error/404.tpl"
+	ec.LayoutSections = make(map[string]string)
+	ec.LayoutSections["Header"] = "meta/header.tpl"
+	ec.LayoutSections["Scripts"] = "meta/scripts.tpl"
+}
+
 func replace(str string, from string, to string) (out string) {
 	return strings.Replace(str, from, to, -1)
 }
@@ -460,5 +472,7 @@ func main() {
 	web.AddFuncMap("get_content", get_content)
 	web.AddFuncMap("safe", safe)
 	web.AddFuncMap("attr", attr)
+	// for error handling
+	web.ErrorController(&ErrorController{})
 	web.Run()
 }
