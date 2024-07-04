@@ -16,8 +16,8 @@ $('#submit').click(function() {
     textType = "#values"
   }
   var value = $(textType).val();
-  if (value.length >= 100) {
-    $('#warning').css("color", "#f14668").text("Must be 100 characters or less.")
+  if (value.length >= 200) {
+    $('#warning').css("color", "#f14668").text("Must be 200 characters or less.")
     $('#submit').removeClass('is-loading');
   } else {
     $.ajax({
