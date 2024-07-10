@@ -20,6 +20,10 @@ And build and run it.
 
 You can access with your browser to "http://localhost:8080/".
 
+Update libraries.
+
+* go get -u && go mod tidy
+
 ## localhost on Docker (docker-compose)
 If you haven't installed docker and docker-compose yet, first you should install them.
 
