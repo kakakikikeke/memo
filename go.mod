@@ -7,7 +7,7 @@ toolchain go1.24.0
 require (
 	github.com/beego/beego/v2 v2.3.4
 	github.com/go-redis/redis v6.15.9+incompatible
-	golang.org/x/crypto v0.34.0
+	golang.org/x/crypto v0.35.0
 )
 
 require (
