@@ -2,10 +2,10 @@ module github.com/kakakikikeke/memo
 
 go 1.23.0
 
-toolchain go1.24.0
+toolchain go1.24.1
 
 require (
-	github.com/beego/beego/v2 v2.3.5
+	github.com/beego/beego/v2 v2.3.6
 	github.com/go-redis/redis v6.15.9+incompatible
 	golang.org/x/crypto v0.36.0
 )
