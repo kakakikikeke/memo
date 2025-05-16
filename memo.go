@@ -9,6 +9,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const KEY = "memo"
@@ -47,6 +48,19 @@ type ErrorController struct {
 	web.Controller
 }
 
+type RedisClient interface {
+	LRange(key string, start, stop int64) *redis.StringSliceCmd
+	LPush(key string, values ...interface{}) *redis.IntCmd
+	Del(keys ...string) *redis.IntCmd
+	Get(key string) *redis.StringCmd
+	Set(key string, value interface{}, expiration time.Duration) *redis.StatusCmd
+	Close() error
+}
+
+var RedisClientFactory = func() RedisClient {
+	return NewClient()
+}
+
 func NewClient() (client *redis.Client) {
 	redisURL := "redis://localhost:6379/0"
 	if url := os.Getenv("REDIS_URL"); url != "" {
@@ -70,7 +84,7 @@ func (mc *MainController) ListText() {
 	}
 	key := name.(string) + ":" + KEY
 	logs.Debug(name)
-	cli := NewClient()
+	cli := RedisClientFactory()
 	defer cli.Close()
 	memos, err := cli.LRange(key, 0, -1).Result()
 	if err != nil {
@@ -95,7 +109,7 @@ func (mc *MainController) SaveText() {
 	if err := mc.ParseForm(&m); err != nil {
 		panic(err)
 	}
-	cli := NewClient()
+	cli := RedisClientFactory()
 	defer cli.Close()
 	texts, _ := cli.LRange(key, 0, -1).Result()
 	if len(texts) > 9 {
@@ -118,7 +132,7 @@ func (mc *MainController) ClearText() {
 		name = "anonymous"
 	}
 	key := name.(string) + ":" + KEY
-	cli := NewClient()
+	cli := RedisClientFactory()
 	defer cli.Close()
 	ret, err := cli.Del(key).Result()
 	if err != nil {
@@ -135,7 +149,7 @@ func (mc *MainController) ListImage() {
 	}
 	key := name.(string) + ":" + IMAGE_KEY
 	logs.Debug(name)
-	cli := NewClient()
+	cli := RedisClientFactory()
 	defer cli.Close()
 	images, err := cli.LRange(key, 0, -1).Result()
 	if err != nil {
@@ -160,7 +174,7 @@ func (mc *MainController) SaveImage() {
 	if err := mc.ParseForm(&img); err != nil {
 		panic(err)
 	}
-	cli := NewClient()
+	cli := RedisClientFactory()
 	defer cli.Close()
 	images, _ := cli.LRange(key, 0, -1).Result()
 	if len(images) > 0 {
@@ -184,7 +198,7 @@ func (mc *MainController) ClearImage() {
 		name = "anonymous"
 	}
 	key := name.(string) + ":" + IMAGE_KEY
-	cli := NewClient()
+	cli := RedisClientFactory()
 	defer cli.Close()
 	ret, err := cli.Del(key).Result()
 	if err != nil {
@@ -204,7 +218,7 @@ func (mc *MainController) ListFile() {
 	}
 	key := name.(string) + ":" + FILE_KEY
 	logs.Debug(name)
-	cli := NewClient()
+	cli := RedisClientFactory()
 	defer cli.Close()
 	files, err := cli.LRange(key, 0, -1).Result()
 	if err != nil {
@@ -229,7 +243,7 @@ func (mc *MainController) SaveFile() {
 	if err := mc.ParseForm(&file); err != nil {
 		panic(err)
 	}
-	cli := NewClient()
+	cli := RedisClientFactory()
 	defer cli.Close()
 	files, _ := cli.LRange(key, 0, -1).Result()
 	if len(files) > 0 {
@@ -253,7 +267,7 @@ func (mc *MainController) ClearFile() {
 		name = "anonymous"
 	}
 	key := name.(string) + ":" + FILE_KEY
-	cli := NewClient()
+	cli := RedisClientFactory()
 	defer cli.Close()
 	ret, err := cli.Del(key).Result()
 	if err != nil {
@@ -304,7 +318,7 @@ func (mc *MainController) Check() {
 	if err := mc.ParseForm(&u); err != nil {
 		panic(err)
 	}
-	cli := NewClient()
+	cli := RedisClientFactory()
 	defer cli.Close()
 	pass, err := cli.Get(u.Name).Result()
 	if err != nil {
@@ -330,7 +344,7 @@ func (mc *MainController) Create() {
 		panic(err)
 		return
 	}
-	cli := NewClient()
+	cli := RedisClientFactory()
 	defer cli.Close()
 	err := cli.Get(newu.Name).Err()
 	if err == nil {
@@ -367,7 +381,7 @@ func (mc *MainController) Delete() {
 	key := name.(string) + ":" + KEY
 	key_file := name.(string) + ":" + FILE_KEY
 	key_image := name.(string) + ":" + IMAGE_KEY
-	cli := NewClient()
+	cli := RedisClientFactory()
 	defer cli.Close()
 	err := cli.Del(key).Err()
 	if err != nil {

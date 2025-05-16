@@ -30,3 +30,6 @@ If you haven't installed docker and docker-compose yet, first you should install
 * docker compose up -d
 
 You can access with your browser to "http://localhost/".
+
+## Test
+* go test ./...
