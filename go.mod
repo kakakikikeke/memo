@@ -3,7 +3,7 @@ module github.com/kakakikikeke/memo
 go 1.24.3
 
 require (
-	github.com/beego/beego/v2 v2.3.7
+	github.com/beego/beego/v2 v2.3.8
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/stretchr/testify v1.10.0
 	golang.org/x/crypto v0.38.0
