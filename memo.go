@@ -1,9 +1,10 @@
 package main
 
 import (
+	"context"
 	"github.com/beego/beego/v2/core/logs"
 	"github.com/beego/beego/v2/server/web"
-	"github.com/go-redis/redis"
+	"github.com/redis/go-redis/v9"
 	"golang.org/x/crypto/bcrypt"
 	"html/template"
 	"os"
@@ -49,11 +50,11 @@ type ErrorController struct {
 }
 
 type RedisClient interface {
-	LRange(key string, start, stop int64) *redis.StringSliceCmd
-	LPush(key string, values ...interface{}) *redis.IntCmd
-	Del(keys ...string) *redis.IntCmd
-	Get(key string) *redis.StringCmd
-	Set(key string, value interface{}, expiration time.Duration) *redis.StatusCmd
+	LRange(ctx context.Context, key string, start, stop int64) *redis.StringSliceCmd
+	LPush(ctx context.Context, key string, values ...interface{}) *redis.IntCmd
+	Del(ctx context.Context, keys ...string) *redis.IntCmd
+	Get(ctx context.Context, key string) *redis.StringCmd
+	Set(ctx context.Context, key string, value interface{}, expiration time.Duration) *redis.StatusCmd
 	Close() error
 }
 
@@ -86,7 +87,8 @@ func (mc *MainController) ListText() {
 	logs.Debug(name)
 	cli := RedisClientFactory()
 	defer cli.Close()
-	memos, err := cli.LRange(key, 0, -1).Result()
+	ctx := mc.Ctx.Request.Context()
+	memos, err := cli.LRange(ctx, key, 0, -1).Result()
 	if err != nil {
 		panic(err)
 	}
@@ -111,14 +113,15 @@ func (mc *MainController) SaveText() {
 	}
 	cli := RedisClientFactory()
 	defer cli.Close()
-	texts, _ := cli.LRange(key, 0, -1).Result()
+	ctx := mc.Ctx.Request.Context()
+	texts, _ := cli.LRange(ctx, key, 0, -1).Result()
 	if len(texts) > 9 {
 		mc.Ctx.ResponseWriter.WriteHeader(403)
 		mc.Data["json"] = map[string]string{"msg": "Exceeds the number of texts that can be uploaded."}
 		mc.ServeJSON()
 		return
 	}
-	size, err := cli.LPush(key, m.Msg).Result()
+	size, err := cli.LPush(ctx, key, m.Msg).Result()
 	if err != nil {
 		panic(err)
 	}
@@ -134,7 +137,8 @@ func (mc *MainController) ClearText() {
 	key := name.(string) + ":" + KEY
 	cli := RedisClientFactory()
 	defer cli.Close()
-	ret, err := cli.Del(key).Result()
+	ctx := mc.Ctx.Request.Context()
+	ret, err := cli.Del(ctx, key).Result()
 	if err != nil {
 		panic(err)
 	}
@@ -151,7 +155,8 @@ func (mc *MainController) ListImage() {
 	logs.Debug(name)
 	cli := RedisClientFactory()
 	defer cli.Close()
-	images, err := cli.LRange(key, 0, -1).Result()
+	ctx := mc.Ctx.Request.Context()
+	images, err := cli.LRange(ctx, key, 0, -1).Result()
 	if err != nil {
 		panic(err)
 	}
@@ -176,7 +181,8 @@ func (mc *MainController) SaveImage() {
 	}
 	cli := RedisClientFactory()
 	defer cli.Close()
-	images, _ := cli.LRange(key, 0, -1).Result()
+	ctx := mc.Ctx.Request.Context()
+	images, _ := cli.LRange(ctx, key, 0, -1).Result()
 	if len(images) > 0 {
 		mc.Ctx.ResponseWriter.WriteHeader(403)
 		mc.Data["json"] = map[string]string{"msg": "Exceeds the number of images that can be uploaded."}
@@ -184,7 +190,7 @@ func (mc *MainController) SaveImage() {
 		return
 	}
 	replaced_img := replace(img.Base64Img, " ", "+")
-	size, err := cli.LPush(key, replaced_img).Result()
+	size, err := cli.LPush(ctx, key, replaced_img).Result()
 	if err != nil {
 		panic(err)
 	}
@@ -200,7 +206,8 @@ func (mc *MainController) ClearImage() {
 	key := name.(string) + ":" + IMAGE_KEY
 	cli := RedisClientFactory()
 	defer cli.Close()
-	ret, err := cli.Del(key).Result()
+	ctx := mc.Ctx.Request.Context()
+	ret, err := cli.Del(ctx, key).Result()
 	if err != nil {
 		panic(err)
 	}
@@ -220,7 +227,8 @@ func (mc *MainController) ListFile() {
 	logs.Debug(name)
 	cli := RedisClientFactory()
 	defer cli.Close()
-	files, err := cli.LRange(key, 0, -1).Result()
+	ctx := mc.Ctx.Request.Context()
+	files, err := cli.LRange(ctx, key, 0, -1).Result()
 	if err != nil {
 		panic(err)
 	}
@@ -245,7 +253,8 @@ func (mc *MainController) SaveFile() {
 	}
 	cli := RedisClientFactory()
 	defer cli.Close()
-	files, _ := cli.LRange(key, 0, -1).Result()
+	ctx := mc.Ctx.Request.Context()
+	files, _ := cli.LRange(ctx, key, 0, -1).Result()
 	if len(files) > 0 {
 		mc.Ctx.ResponseWriter.WriteHeader(403)
 		mc.Data["json"] = map[string]string{"msg": "Exceeds the number of files that can be uploaded."}
@@ -253,7 +262,7 @@ func (mc *MainController) SaveFile() {
 		return
 	}
 	replaced_file := replace(file.Base64File, " ", "+")
-	size, err := cli.LPush(key, replaced_file+"^_^"+file.Filename).Result()
+	size, err := cli.LPush(ctx, key, replaced_file+"^_^"+file.Filename).Result()
 	if err != nil {
 		panic(err)
 	}
@@ -269,7 +278,8 @@ func (mc *MainController) ClearFile() {
 	key := name.(string) + ":" + FILE_KEY
 	cli := RedisClientFactory()
 	defer cli.Close()
-	ret, err := cli.Del(key).Result()
+	ctx := mc.Ctx.Request.Context()
+	ret, err := cli.Del(ctx, key).Result()
 	if err != nil {
 		panic(err)
 	}
@@ -320,7 +330,8 @@ func (mc *MainController) Check() {
 	}
 	cli := RedisClientFactory()
 	defer cli.Close()
-	pass, err := cli.Get(u.Name).Result()
+	ctx := mc.Ctx.Request.Context()
+	pass, err := cli.Get(ctx, u.Name).Result()
 	if err != nil {
 		mc.Ctx.ResponseWriter.WriteHeader(403)
 		mc.Data["json"] = map[string]string{"msg": "User does not found."}
@@ -346,7 +357,8 @@ func (mc *MainController) Create() {
 	}
 	cli := RedisClientFactory()
 	defer cli.Close()
-	err := cli.Get(newu.Name).Err()
+	ctx := mc.Ctx.Request.Context()
+	err := cli.Get(ctx, newu.Name).Err()
 	if err == nil {
 		mc.Ctx.ResponseWriter.WriteHeader(403)
 		mc.Data["json"] = map[string]string{"msg": "Specified user already exists."}
@@ -361,7 +373,7 @@ func (mc *MainController) Create() {
 		return
 	}
 	hash, err := bcrypt.GenerateFromPassword([]byte(newu.Pass), bcrypt.DefaultCost)
-	err = cli.Set(newu.Name, hash, 0).Err()
+	err = cli.Set(ctx, newu.Name, hash, 0).Err()
 	if err != nil {
 		panic(err)
 		return
@@ -383,22 +395,23 @@ func (mc *MainController) Delete() {
 	key_image := name.(string) + ":" + IMAGE_KEY
 	cli := RedisClientFactory()
 	defer cli.Close()
-	err := cli.Del(key).Err()
+	ctx := mc.Ctx.Request.Context()
+	err := cli.Del(ctx, key).Err()
 	if err != nil {
 		panic(err)
 		return
 	}
-	err = cli.Del(key_file).Err()
+	err = cli.Del(ctx, key_file).Err()
 	if err != nil {
 		panic(err)
 		return
 	}
-	err = cli.Del(key_image).Err()
+	err = cli.Del(ctx, key_image).Err()
 	if err != nil {
 		panic(err)
 		return
 	}
-	err = cli.Del(name.(string)).Err()
+	err = cli.Del(ctx, name.(string)).Err()
 	if err != nil {
 		panic(err)
 		return
