@@ -4,7 +4,7 @@ go 1.24.3
 
 require (
 	github.com/beego/beego/v2 v2.3.8
-	github.com/redis/go-redis/v9 v9.14.1
+	github.com/redis/go-redis/v9 v9.16.0
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/crypto v0.43.0
 )
