@@ -2,15 +2,16 @@ package main
 
 import (
 	"context"
-	"github.com/beego/beego/v2/core/logs"
-	"github.com/beego/beego/v2/server/web"
-	"github.com/redis/go-redis/v9"
-	"golang.org/x/crypto/bcrypt"
 	"html/template"
 	"os"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/beego/beego/v2/core/logs"
+	"github.com/beego/beego/v2/server/web"
+	"github.com/redis/go-redis/v9"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const KEY = "memo"
@@ -76,6 +77,7 @@ func NewClient() (client *redis.Client) {
 }
 
 func (mc *MainController) ListText() {
+	logAccessMain(mc, "ListText")
 	name := mc.GetSession("user")
 	if name == nil {
 		name = "anonymous"
@@ -102,6 +104,7 @@ func (mc *MainController) ListText() {
 }
 
 func (mc *MainController) SaveText() {
+	logAccessMain(mc, "SaveText")
 	name := mc.GetSession("user")
 	if name == nil {
 		name = "anonymous"
@@ -130,6 +133,7 @@ func (mc *MainController) SaveText() {
 }
 
 func (mc *MainController) ClearText() {
+	logAccessMain(mc, "ClearText")
 	name := mc.GetSession("user")
 	if name == nil {
 		name = "anonymous"
@@ -288,6 +292,7 @@ func (mc *MainController) ClearFile() {
 }
 
 func (mc *MainController) Login() {
+	logAccessMain(mc, "Login")
 	mc.Layout = "meta/layout.tpl"
 	mc.TplName = "account/login.tpl"
 	mc.LayoutSections = make(map[string]string)
@@ -296,6 +301,7 @@ func (mc *MainController) Login() {
 }
 
 func (mc *MainController) SignUp() {
+	logAccessMain(mc, "SignUp")
 	mc.Layout = "meta/layout.tpl"
 	mc.TplName = "account/signup.tpl"
 	mc.LayoutSections = make(map[string]string)
@@ -304,6 +310,7 @@ func (mc *MainController) SignUp() {
 }
 
 func (mc *MainController) SignOff() {
+	logAccessMain(mc, "SignOff")
 	name := mc.GetSession("user")
 	if name == nil {
 		mc.Redirect("/", 302)
@@ -317,6 +324,7 @@ func (mc *MainController) SignOff() {
 }
 
 func (mc *MainController) Logout() {
+	logAccessMain(mc, "Logout")
 	mc.Data["isLogin"] = false
 	mc.Data["name"] = nil
 	mc.DelSession("user")
@@ -324,6 +332,7 @@ func (mc *MainController) Logout() {
 }
 
 func (mc *MainController) Check() {
+	logAccessMain(mc, "Check")
 	u := User{}
 	if err := mc.ParseForm(&u); err != nil {
 		panic(err)
@@ -350,10 +359,10 @@ func (mc *MainController) Check() {
 }
 
 func (mc *MainController) Create() {
+	logAccessMain(mc, "Create")
 	newu := NewUser{}
 	if err := mc.ParseForm(&newu); err != nil {
 		panic(err)
-		return
 	}
 	cli := RedisClientFactory()
 	defer cli.Close()
@@ -376,7 +385,6 @@ func (mc *MainController) Create() {
 	err = cli.Set(ctx, newu.Name, hash, 0).Err()
 	if err != nil {
 		panic(err)
-		return
 	}
 	mc.SetSession("user", newu.Name)
 	mc.TplName = "account/success.tpl"
@@ -399,22 +407,18 @@ func (mc *MainController) Delete() {
 	err := cli.Del(ctx, key).Err()
 	if err != nil {
 		panic(err)
-		return
 	}
 	err = cli.Del(ctx, key_file).Err()
 	if err != nil {
 		panic(err)
-		return
 	}
 	err = cli.Del(ctx, key_image).Err()
 	if err != nil {
 		panic(err)
-		return
 	}
 	err = cli.Del(ctx, name.(string)).Err()
 	if err != nil {
 		panic(err)
-		return
 	}
 	mc.Data["isLogin"] = false
 	mc.Data["name"] = nil
@@ -423,6 +427,7 @@ func (mc *MainController) Delete() {
 }
 
 func (ec *ErrorController) Error404() {
+	logAccessError(ec, "Error404")
 	ec.Layout = "meta/layout.tpl"
 	ec.TplName = "error/404.tpl"
 	ec.LayoutSections = make(map[string]string)
@@ -458,6 +463,20 @@ func attr(s string) template.HTMLAttr {
 
 func safe(s string) template.HTML {
 	return template.HTML(s)
+}
+
+func logAccessMain(mc *MainController, action string) {
+	name := mc.GetSession("user")
+	if name == nil {
+		name = "anonymous"
+	}
+	ip := mc.Ctx.Input.IP()
+	logs.Info(action, " user=", name, " ip=", ip)
+}
+
+func logAccessError(ec *ErrorController, action string) {
+	ip := ec.Ctx.Input.IP()
+	logs.Info(action, " ip=", ip)
 }
 
 func main() {
