@@ -2,12 +2,10 @@ package controller
 
 import (
 	"html/template"
-	"os"
 	"strings"
 
 	"github.com/beego/beego/v2/core/logs"
 	"github.com/beego/beego/v2/server/web"
-	"github.com/redis/go-redis/v9"
 )
 
 const (
@@ -22,26 +20,6 @@ type BaseController struct {
 
 type ErrorController struct {
 	web.Controller
-}
-
-type RedisClient = interface {
-	Close() error
-}
-
-var RedisClientFactory = func() RedisClient {
-	return NewClient()
-}
-
-func NewClient() *redis.Client {
-	redisURL := "redis://localhost:6379/0"
-	if url := os.Getenv("REDIS_URL"); url != "" {
-		redisURL = url
-	}
-	opt, err := redis.ParseURL(redisURL)
-	if err != nil {
-		panic(err)
-	}
-	return redis.NewClient(opt)
 }
 
 func (c *BaseController) CurrentUsername() string {

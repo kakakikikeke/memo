@@ -6,7 +6,7 @@ import (
 
 	"github.com/beego/beego/v2/core/logs"
 	"github.com/beego/beego/v2/server/web"
-	basectrl "github.com/kakakikikeke/memo/internal/controller"
+	"github.com/kakakikikeke/memo/internal/database"
 	"github.com/kakakikikeke/memo/internal/repository"
 	"github.com/kakakikikeke/memo/internal/service"
 )
@@ -33,7 +33,7 @@ func NewController(svc *service.MemoService) *Controller {
 
 func (c *Controller) getMemoService() *service.MemoService {
 	if c.memoService == nil {
-		c.memoService = service.NewMemoService(repository.NewRedisRepository(basectrl.NewClient()))
+		c.memoService = service.NewMemoService(repository.NewRedisRepository(database.NewClient()))
 	}
 	return c.memoService
 }
