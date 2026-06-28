@@ -6,6 +6,10 @@ import (
 
 	"github.com/beego/beego/v2/server/web"
 	"github.com/kakakikikeke/memo/internal/controller"
+	filectrl "github.com/kakakikikeke/memo/internal/controller/file"
+	imagectrl "github.com/kakakikikeke/memo/internal/controller/image"
+	textctrl "github.com/kakakikikeke/memo/internal/controller/text"
+	userctrl "github.com/kakakikikeke/memo/internal/controller/user"
 )
 
 func main() {
@@ -20,25 +24,25 @@ func main() {
 	web.BConfig.Listen.HTTPPort = port
 	web.BConfig.WebConfig.Session.SessionOn = true
 	// for memo
-	web.Router("/", new(controller.MainController), "*:ListText")
-	web.Router("/insert", new(controller.MainController), "post:SaveText")
-	web.Router("/clear", new(controller.MainController), "post:ClearText")
+	web.Router("/", new(textctrl.Controller), "*:List")
+	web.Router("/insert", new(textctrl.Controller), "post:Save")
+	web.Router("/clear", new(textctrl.Controller), "post:Clear")
 	// for image
-	web.Router("/image", new(controller.MainController), "get:ListImage")
-	web.Router("/save", new(controller.MainController), "post:SaveImage")
-	web.Router("/clear_img", new(controller.MainController), "post:ClearImage")
+	web.Router("/image", new(imagectrl.Controller), "get:List")
+	web.Router("/save", new(imagectrl.Controller), "post:Save")
+	web.Router("/clear_img", new(imagectrl.Controller), "post:Clear")
 	// for file
-	web.Router("/file", new(controller.MainController), "get:ListFile")
-	web.Router("/upload", new(controller.MainController), "post:SaveFile")
-	web.Router("/clear_file", new(controller.MainController), "post:ClearFile")
+	web.Router("/file", new(filectrl.Controller), "get:List")
+	web.Router("/upload", new(filectrl.Controller), "post:Save")
+	web.Router("/clear_file", new(filectrl.Controller), "post:Clear")
 	// for user management
-	web.Router("/login", new(controller.MainController), "get:Login")
-	web.Router("/check", new(controller.MainController), "post:Check")
-	web.Router("/logout", new(controller.MainController), "post:Logout")
-	web.Router("/signup", new(controller.MainController), "get:SignUp")
-	web.Router("/create", new(controller.MainController), "post:Create")
-	web.Router("/signoff", new(controller.MainController), "get:SignOff")
-	web.Router("/delete", new(controller.MainController), "post:Delete")
+	web.Router("/login", new(userctrl.Controller), "get:Login")
+	web.Router("/check", new(userctrl.Controller), "post:Check")
+	web.Router("/logout", new(userctrl.Controller), "post:Logout")
+	web.Router("/signup", new(userctrl.Controller), "get:SignUp")
+	web.Router("/create", new(userctrl.Controller), "post:Create")
+	web.Router("/signoff", new(userctrl.Controller), "get:SignOff")
+	web.Router("/delete", new(userctrl.Controller), "post:Delete")
 	// for template functions
 	web.AddFuncMap("rep", controller.Replace)
 	web.AddFuncMap("is_first", controller.IsFirst)
