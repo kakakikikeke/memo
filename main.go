@@ -6,13 +6,7 @@ import (
 
 	"github.com/beego/beego/v2/server/web"
 	"github.com/kakakikikeke/memo/internal/controller"
-	"github.com/kakakikikeke/memo/internal/repository"
-	"github.com/kakakikikeke/memo/internal/service"
 )
-
-func NewMemoService(repo repository.Repository) *service.MemoService {
-	return service.NewMemoService(repo)
-}
 
 func main() {
 	port := 8080
