@@ -96,6 +96,12 @@ func (c *Controller) Create() {
 	if err := c.ParseForm(&newu); err != nil {
 		panic(err)
 	}
+	if newu.Pass != newu.Pass2 {
+		c.Ctx.ResponseWriter.WriteHeader(403)
+		c.Data["json"] = map[string]string{"msg": "Does not match password."}
+		c.ServeJSON()
+		return
+	}
 	ctx := c.Ctx.Request.Context()
 	if err := c.getMemoService().CreateUser(ctx, newu.Name, newu.Pass); err != nil {
 		if errors.Is(err, service.ErrUserAlreadyExists) {
@@ -105,12 +111,6 @@ func (c *Controller) Create() {
 			return
 		}
 		panic(err)
-	}
-	if newu.Pass != newu.Pass2 {
-		c.Ctx.ResponseWriter.WriteHeader(403)
-		c.Data["json"] = map[string]string{"msg": "Does not match password."}
-		c.ServeJSON()
-		return
 	}
 	c.SetSession("user", newu.Name)
 	c.TplName = "account/success.tpl"

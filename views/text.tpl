@@ -92,8 +92,7 @@
         </p>
       </div>
       {{ range $memo := .memos }}
-        {{ $replaced_memo := rep $memo "\n" "<br>" }}
-        <div>{{ str2html $replaced_memo }}</div>
+        <div style="white-space: pre-wrap;">{{ $memo }}</div>
       {{ end }}
     </div>
   </div>

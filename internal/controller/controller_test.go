@@ -11,6 +11,7 @@ import (
 	"time"
 
 	beegocontext "github.com/beego/beego/v2/server/web/context"
+	basectrl "github.com/kakakikikeke/memo/internal/controller"
 	textctrl "github.com/kakakikikeke/memo/internal/controller/text"
 	"github.com/kakakikikeke/memo/internal/repository"
 	"github.com/kakakikikeke/memo/internal/service"
@@ -116,4 +117,24 @@ func TestSaveText(t *testing.T) {
 	assert.Equal(t, []string{"Hello, world!"}, mockRedis.data["testuser:"+"memo"])
 	assert.Equal(t, 302, w.Code)
 	assert.Equal(t, "/", w.Header().Get("Location"))
+}
+
+func TestIsValidFileDataURL(t *testing.T) {
+	valid := "data:text/plain;base64,SGVsbG8="
+	invalidScheme := "javascript:alert(1)"
+	invalidMIME := "data:text/html;base64,PHNjcmlwdD4="
+	invalidBase64 := "data:text/plain;base64,%%%"
+
+	assert.True(t, basectrl.IsValidFileDataURL(valid))
+	assert.False(t, basectrl.IsValidFileDataURL(invalidScheme))
+	assert.False(t, basectrl.IsValidFileDataURL(invalidMIME))
+	assert.False(t, basectrl.IsValidFileDataURL(invalidBase64))
+}
+
+func TestGetContentReturnsOnlyValidatedURL(t *testing.T) {
+	validFileInfo := "data:text/plain;base64,SGVsbG8=^_^hello.txt"
+	invalidFileInfo := "javascript:alert(1)^_^bad.txt"
+
+	assert.Equal(t, "data:text/plain;base64,SGVsbG8=", basectrl.GetContent(validFileInfo))
+	assert.Equal(t, "", basectrl.GetContent(invalidFileInfo))
 }

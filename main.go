@@ -50,7 +50,6 @@ func main() {
 	web.AddFuncMap("get_file_name", controller.GetFileName)
 	web.AddFuncMap("get_content", controller.GetContent)
 	web.AddFuncMap("safe", controller.Safe)
-	web.AddFuncMap("attr", controller.Attr)
 	// for error handling
 	web.ErrorController(&controller.ErrorController{})
 	web.Run()

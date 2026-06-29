@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"encoding/base64"
 	"html/template"
 	"strings"
 
@@ -76,17 +77,64 @@ func IsEnd(index int) bool {
 }
 
 func GetFileName(fileInfo string) string {
-	fileInfoList := strings.Split(fileInfo, "^_^")
+	fileInfoList := strings.SplitN(fileInfo, "^_^", 2)
+	if len(fileInfoList) < 2 {
+		return ""
+	}
 	return fileInfoList[len(fileInfoList)-1]
 }
 
 func GetContent(fileInfo string) string {
-	fileInfoList := strings.Split(fileInfo, "^_^")
-	return "href=" + fileInfoList[0]
+	fileInfoList := strings.SplitN(fileInfo, "^_^", 2)
+	if len(fileInfoList) < 2 {
+		return ""
+	}
+	content := fileInfoList[0]
+	if !IsValidFileDataURL(content) {
+		return ""
+	}
+	return content
 }
 
-func Attr(s string) template.HTMLAttr {
-	return template.HTMLAttr(s)
+func IsValidFileDataURL(value string) bool {
+	const prefix = "data:"
+	const marker = ";base64,"
+
+	if !strings.HasPrefix(value, prefix) {
+		return false
+	}
+	idx := strings.Index(value, marker)
+	if idx <= len(prefix) {
+		return false
+	}
+	mime := strings.ToLower(value[len(prefix):idx])
+	if !isAllowedFileMIME(mime) {
+		return false
+	}
+	encoded := value[idx+len(marker):]
+	if encoded == "" {
+		return false
+	}
+	if _, err := base64.StdEncoding.DecodeString(encoded); err == nil {
+		return true
+	}
+	_, err := base64.RawStdEncoding.DecodeString(encoded)
+	return err == nil
+}
+
+func isAllowedFileMIME(mime string) bool {
+	allowed := map[string]struct{}{
+		"application/octet-stream": {},
+		"application/pdf":          {},
+		"application/zip":          {},
+		"image/gif":                {},
+		"image/jpeg":               {},
+		"image/png":                {},
+		"text/csv":                 {},
+		"text/plain":               {},
+	}
+	_, ok := allowed[mime]
+	return ok
 }
 
 func Safe(s string) template.HTML {

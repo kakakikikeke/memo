@@ -55,6 +55,12 @@ func (c *Controller) Save() {
 	}
 	ctx := c.Ctx.Request.Context()
 	replacedFile := basectrl.Replace(file.Base64File, " ", "+")
+	if !basectrl.IsValidFileDataURL(replacedFile) {
+		c.Ctx.ResponseWriter.WriteHeader(400)
+		c.Data["json"] = map[string]string{"msg": "Invalid file data."}
+		c.ServeJSON()
+		return
+	}
 	value := replacedFile + "^_^" + file.Filename
 	if err := c.getMemoService().SaveFileWithLimit(ctx, username, value); err != nil {
 		c.Ctx.ResponseWriter.WriteHeader(403)

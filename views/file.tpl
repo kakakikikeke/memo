@@ -93,7 +93,9 @@
       </div>
       {{ range $file := .files }}
         {{ $content := get_content $file }}
-        <div><a download="{{ get_file_name $file }}" {{ $content | attr }}>{{ get_file_name $file }}</a></div>
+        {{ if $content }}
+        <div><a download="{{ get_file_name $file }}" href="{{ $content }}">{{ get_file_name $file }}</a></div>
+        {{ end }}
       {{ end }}
     </div>
   </div>
