@@ -1,5 +1,4 @@
 package text
-package text
 
 import (
 	"context"

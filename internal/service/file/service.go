@@ -1,5 +1,4 @@
 package file
-package file
 
 import (
 	"context"

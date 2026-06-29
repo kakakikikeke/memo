@@ -1,5 +1,4 @@
 package image
-package image
 
 import (
 	"context"
