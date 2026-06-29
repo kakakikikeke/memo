@@ -15,6 +15,7 @@ import (
 	"github.com/kakakikikeke/memo/internal/service"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type mockSession struct {
@@ -120,4 +121,81 @@ func TestCreatePasswordMismatchDoesNotCreateUser(t *testing.T) {
 	assert.Equal(t, 403, w.Code)
 	_, exists := repo.users["alice"]
 	assert.False(t, exists)
+}
+
+func TestCreateUserSuccessCreatesUserAndSession(t *testing.T) {
+	repo := newInMemoryRepository()
+	ctrl := userctrl.NewController(service.NewMemoService(repo))
+
+	form := url.Values{}
+	form.Add("name", "alice")
+	form.Add("pass", "secret")
+	form.Add("pass2", "secret")
+
+	req := httptest.NewRequest("POST", "/create", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	w := httptest.NewRecorder()
+
+	ctx := beegocontext.NewContext()
+	ctx.Reset(w, req)
+	sess := &mockSession{store: make(map[interface{}]interface{})}
+	ctx.Input.CruSession = sess
+
+	ctrl.Init(ctx, "UserController", "Create", nil)
+	ctrl.EnableRender = false
+	ctrl.Create()
+
+	assert.Equal(t, 200, w.Code)
+	assert.Equal(t, "alice", sess.Get(stdctx.Background(), "user"))
+	hash, exists := repo.users["alice"]
+	assert.True(t, exists)
+	assert.NotEqual(t, "secret", hash)
+}
+
+func TestCheckWrongPasswordReturnsForbidden(t *testing.T) {
+	repo := newInMemoryRepository()
+	hash, err := bcrypt.GenerateFromPassword([]byte("correct"), bcrypt.DefaultCost)
+	assert.NoError(t, err)
+	repo.users["alice"] = string(hash)
+
+	ctrl := userctrl.NewController(service.NewMemoService(repo))
+
+	form := url.Values{}
+	form.Add("name", "alice")
+	form.Add("pass", "wrong")
+
+	req := httptest.NewRequest("POST", "/check", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	w := httptest.NewRecorder()
+
+	ctx := beegocontext.NewContext()
+	ctx.Reset(w, req)
+	sess := &mockSession{store: make(map[interface{}]interface{})}
+	ctx.Input.CruSession = sess
+
+	ctrl.Init(ctx, "UserController", "Check", nil)
+	ctrl.EnableRender = false
+	ctrl.Check()
+
+	assert.Equal(t, 403, w.Code)
+	assert.Nil(t, sess.Get(stdctx.Background(), "user"))
+}
+
+func TestCreateInvalidFormReturnsBadRequest(t *testing.T) {
+	repo := newInMemoryRepository()
+	ctrl := userctrl.NewController(service.NewMemoService(repo))
+
+	req := httptest.NewRequest("POST", "/create", strings.NewReader("name=%zz&pass=x&pass2=x"))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	w := httptest.NewRecorder()
+
+	ctx := beegocontext.NewContext()
+	ctx.Reset(w, req)
+	ctx.Input.CruSession = &mockSession{store: make(map[interface{}]interface{})}
+
+	ctrl.Init(ctx, "UserController", "Create", nil)
+	ctrl.EnableRender = false
+	ctrl.Create()
+
+	assert.Equal(t, 400, w.Code)
 }

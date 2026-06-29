@@ -37,7 +37,10 @@ func (c *Controller) List() {
 	ctx := c.Ctx.Request.Context()
 	images, err := c.getMemoService().ListImage(ctx, username)
 	if err != nil {
-		panic(err)
+		logs.Error("ListImage failed: ", err)
+		c.Ctx.ResponseWriter.WriteHeader(500)
+		_, _ = c.Ctx.ResponseWriter.Write([]byte("Internal Server Error"))
+		return
 	}
 	logs.Debug(len(images))
 	c.RenderLayout("image.tpl")
@@ -50,7 +53,10 @@ func (c *Controller) Save() {
 	username := c.CurrentUsername()
 	img := ImageForm{}
 	if err := c.ParseForm(&img); err != nil {
-		panic(err)
+		c.Ctx.ResponseWriter.WriteHeader(400)
+		c.Data["json"] = map[string]string{"msg": "Invalid request."}
+		c.ServeJSON()
+		return
 	}
 	ctx := c.Ctx.Request.Context()
 	replacedImg := basectrl.Replace(img.Base64Img, " ", "+")
@@ -68,7 +74,11 @@ func (c *Controller) Clear() {
 	username := c.CurrentUsername()
 	ctx := c.Ctx.Request.Context()
 	if err := c.getMemoService().ClearImage(ctx, username); err != nil {
-		panic(err)
+		logs.Error("ClearImage failed: ", err)
+		c.Ctx.ResponseWriter.WriteHeader(500)
+		c.Data["json"] = map[string]string{"msg": "Internal server error."}
+		c.ServeJSON()
+		return
 	}
 	c.Redirect("/image", 302)
 }
@@ -95,6 +105,7 @@ func (c *Controller) SetLoginContext(name interface{}) {
 func (c *Controller) RenderLayout(tplName string) {
 	c.Layout = "meta/layout.tpl"
 	c.TplName = tplName
+	c.Data["csrf_token"] = c.XSRFToken()
 	c.LayoutSections = make(map[string]string)
 	c.LayoutSections["Header"] = "meta/header.tpl"
 	c.LayoutSections["Scripts"] = "meta/scripts.tpl"

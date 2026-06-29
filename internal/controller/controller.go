@@ -45,6 +45,7 @@ func (c *BaseController) SetLoginContext(name interface{}) {
 func (c *BaseController) RenderLayout(tplName string) {
 	c.Layout = "meta/layout.tpl"
 	c.TplName = tplName
+	c.Data["csrf_token"] = c.XSRFToken()
 	c.LayoutSections = make(map[string]string)
 	c.LayoutSections["Header"] = "meta/header.tpl"
 	c.LayoutSections["Scripts"] = "meta/scripts.tpl"
@@ -59,6 +60,7 @@ func (c *BaseController) LogAccess(action string) {
 func (c *ErrorController) Error404() {
 	c.Layout = "meta/layout.tpl"
 	c.TplName = "error/404.tpl"
+	c.Data["csrf_token"] = c.XSRFToken()
 	c.LayoutSections = make(map[string]string)
 	c.LayoutSections["Header"] = "meta/header.tpl"
 	c.LayoutSections["Scripts"] = "meta/scripts.tpl"

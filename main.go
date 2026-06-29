@@ -23,6 +23,22 @@ func main() {
 	}
 	web.BConfig.Listen.HTTPPort = port
 	web.BConfig.WebConfig.Session.SessionOn = true
+	enableXSRF := false
+	if v := os.Getenv("ENABLE_XSRF"); v != "" {
+		b, err := strconv.ParseBool(v)
+		if err == nil {
+			enableXSRF = b
+		}
+	}
+	web.BConfig.WebConfig.EnableXSRF = enableXSRF
+	if enableXSRF {
+		xsrfKey := "memo-xsrf-key-change-me"
+		if k := os.Getenv("XSRF_KEY"); k != "" {
+			xsrfKey = k
+		}
+		web.BConfig.WebConfig.XSRFKey = xsrfKey
+		web.BConfig.WebConfig.XSRFExpire = 3600
+	}
 	// for memo
 	web.Router("/", new(textctrl.Controller), "*:List")
 	web.Router("/insert", new(textctrl.Controller), "post:Save")

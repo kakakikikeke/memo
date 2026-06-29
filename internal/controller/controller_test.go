@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -137,4 +139,20 @@ func TestGetContentReturnsOnlyValidatedURL(t *testing.T) {
 
 	assert.Equal(t, "data:text/plain;base64,SGVsbG8=", basectrl.GetContent(validFileInfo))
 	assert.Equal(t, "", basectrl.GetContent(invalidFileInfo))
+}
+
+func TestTextTemplateDoesNotUseStr2HTML(t *testing.T) {
+	tplPath := filepath.Join("..", "..", "views", "text.tpl")
+	body, err := os.ReadFile(tplPath)
+	assert.NoError(t, err)
+	assert.NotContains(t, string(body), "str2html")
+}
+
+func TestScriptsTemplateInjectsCSRFHeader(t *testing.T) {
+	tplPath := filepath.Join("..", "..", "views", "meta", "scripts.tpl")
+	body, err := os.ReadFile(tplPath)
+	assert.NoError(t, err)
+	content := string(body)
+	assert.Contains(t, content, "csrfToken")
+	assert.Contains(t, content, "X-Xsrftoken")
 }

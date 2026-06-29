@@ -1,4 +1,70 @@
 <script type="text/javascript">
+var csrfToken = "{{ .csrf_token }}";
+
+function getErrorMessage(xhr, fallback) {
+  try {
+    if (xhr && xhr.responseJSON && xhr.responseJSON.msg) {
+      return xhr.responseJSON.msg;
+    }
+    if (xhr && xhr.responseText) {
+      var parsed = JSON.parse(xhr.responseText);
+      if (parsed && parsed.msg) {
+        return parsed.msg;
+      }
+    }
+  } catch (e) {
+  }
+  return fallback;
+}
+
+$.ajaxSetup({
+  beforeSend: function(xhr, settings) {
+    var method = (settings.type || "GET").toUpperCase();
+    if (method === "GET" || method === "HEAD" || method === "OPTIONS") {
+      return;
+    }
+
+    // Beego accepts XSRF token via header and form field.
+    xhr.setRequestHeader("X-Xsrftoken", csrfToken);
+    xhr.setRequestHeader("X-CSRFToken", csrfToken);
+    xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+  }
+});
+
+$.ajaxPrefilter(function(options, originalOptions) {
+  var method = (options.type || "GET").toUpperCase();
+  if (method === "GET" || method === "HEAD" || method === "OPTIONS") {
+    return;
+  }
+
+  var data = originalOptions.data;
+  if (data instanceof FormData) {
+    if (!data.has("_xsrf")) {
+      data.append("_xsrf", csrfToken);
+    }
+    options.data = data;
+    return;
+  }
+
+  if (typeof data === "string") {
+    if (data.indexOf("_xsrf=") === -1) {
+      options.data = data + (data.length > 0 ? "&" : "") + "_xsrf=" + encodeURIComponent(csrfToken);
+    }
+    return;
+  }
+
+  if (data && typeof data === "object") {
+    var payload = $.extend({}, data);
+    if (payload._xsrf === undefined) {
+      payload._xsrf = csrfToken;
+    }
+    options.data = $.param(payload);
+    return;
+  }
+
+  options.data = "_xsrf=" + encodeURIComponent(csrfToken);
+});
+
 // for all
 $(document).ready(function() {
   $('#value,#values').val("");
@@ -31,7 +97,7 @@ $('#submit').click(function() {
       },
       error: function(xhr, status, error) {
         $('#submit').removeClass('is-loading');
-        $('#warning').text($.parseJSON(xhr.responseText).msg);
+          $('#warning').text(getErrorMessage(xhr, "Request failed."));
       }
     });
   }
@@ -95,7 +161,7 @@ $('#upload').click(function() {
         },
         error: function(xhr, status, error) {
           $('#upload').removeClass('is-loading');
-          $('#msg').text($.parseJSON(xhr.responseText).msg);
+          $('#msg').text(getErrorMessage(xhr, "Upload failed."));
         }
       });
     }, false);
@@ -148,7 +214,7 @@ $('#check').click(function() {
     },
     error: function(xhr, status, error) {
       $('#check').removeClass('is-loading');
-      $('#msg').text($.parseJSON(xhr.responseText).msg);
+      $('#msg').text(getErrorMessage(xhr, "Login failed."));
     }
   });
 });
@@ -171,7 +237,7 @@ $('#create').click(function() {
     },
     error: function(xhr, status, error) {
       $('#create').removeClass('is-loading');
-      $('#msg').text($.parseJSON(xhr.responseText).msg);
+      $('#msg').text(getErrorMessage(xhr, "Create failed."));
     }
   });
 });
@@ -192,30 +258,36 @@ $('#delete').click(function() {
 });
 
 // for board
-var board = new DrawingBoard.Board('board', {
-  background: "#ffffff",
-  color: "#000000",
-  size: 30,
-  fillTolerance: 150,
-  controls: [
-    { Size: { type: "range", min: 12, max: 42 } },
-    { Navigation: { back: true, forward: true } },
-    'DrawingMode',
-    'Color'
-  ],
-  webStorage: 'local',
-  droppable: true
-});
-board.addControl('Download');
-board.downloadImg = function() {
-  var img = this.getImg();
-  img = img.replace("image/png", "image/octet-stream");
-  var link = document.createElement('a');
-  link.download = "download.png";
-  link.href = img;
-  link.click();
-};
+var board = null;
+if ($('#board').length) {
+  board = new DrawingBoard.Board('board', {
+    background: "#ffffff",
+    color: "#000000",
+    size: 30,
+    fillTolerance: 150,
+    controls: [
+      { Size: { type: "range", min: 12, max: 42 } },
+      { Navigation: { back: true, forward: true } },
+      'DrawingMode',
+      'Color'
+    ],
+    webStorage: 'local',
+    droppable: true
+  });
+  board.addControl('Download');
+  board.downloadImg = function() {
+    var img = this.getImg();
+    img = img.replace("image/png", "image/octet-stream");
+    var link = document.createElement('a');
+    link.download = "download.png";
+    link.href = img;
+    link.click();
+  };
+}
 $('#save').click(function() {
+  if (!board) {
+    return;
+  }
   $('#save').addClass('is-loading');
   // Error parsing request body:invalid semicolon separator in query
   var img = board.getImg().replace('data:image/png;base64,', '');
@@ -230,7 +302,7 @@ $('#save').click(function() {
     },
     error: function(xhr, status, error) {
       $('#save').removeClass('is-loading');
-      $('#msg').text($.parseJSON(xhr.responseText).msg);
+      $('#msg').text(getErrorMessage(xhr, "Save failed."));
     }
   });
 });

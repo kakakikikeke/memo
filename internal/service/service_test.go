@@ -75,3 +75,27 @@ func TestSaveTextPersistsMessage(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, []string{"hello"}, items)
 }
+
+func TestCreateUserAndAuthenticateSuccess(t *testing.T) {
+	repo := newInMemoryRepository()
+	svc := NewMemoService(repo)
+
+	err := svc.CreateUser(context.Background(), "alice", "secret")
+	require.NoError(t, err)
+
+	ok, err := svc.Authenticate(context.Background(), "alice", "secret")
+	require.NoError(t, err)
+	require.True(t, ok)
+}
+
+func TestAuthenticateWrongPassword(t *testing.T) {
+	repo := newInMemoryRepository()
+	svc := NewMemoService(repo)
+
+	err := svc.CreateUser(context.Background(), "alice", "secret")
+	require.NoError(t, err)
+
+	ok, err := svc.Authenticate(context.Background(), "alice", "wrong")
+	require.NoError(t, err)
+	require.False(t, ok)
+}

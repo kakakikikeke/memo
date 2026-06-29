@@ -39,7 +39,10 @@ func (c *Controller) List() {
 	ctx := c.Ctx.Request.Context()
 	memos, err := c.getMemoService().ListText(ctx, username)
 	if err != nil {
-		panic(err)
+		logs.Error("ListText failed: ", err)
+		c.Ctx.ResponseWriter.WriteHeader(500)
+		_, _ = c.Ctx.ResponseWriter.Write([]byte("Internal Server Error"))
+		return
 	}
 	logs.Debug(memos)
 	c.RenderLayout("text.tpl")
@@ -52,7 +55,10 @@ func (c *Controller) Save() {
 	username := c.CurrentUsername()
 	m := MemoForm{}
 	if err := c.ParseForm(&m); err != nil {
-		panic(err)
+		c.Ctx.ResponseWriter.WriteHeader(400)
+		c.Data["json"] = map[string]string{"msg": "Invalid request."}
+		c.ServeJSON()
+		return
 	}
 	ctx := c.Ctx.Request.Context()
 	if err := c.getMemoService().SaveTextWithLimit(ctx, username, m.Msg); err != nil {
@@ -69,7 +75,11 @@ func (c *Controller) Clear() {
 	username := c.CurrentUsername()
 	ctx := c.Ctx.Request.Context()
 	if err := c.getMemoService().ClearText(ctx, username); err != nil {
-		panic(err)
+		logs.Error("ClearText failed: ", err)
+		c.Ctx.ResponseWriter.WriteHeader(500)
+		c.Data["json"] = map[string]string{"msg": "Internal server error."}
+		c.ServeJSON()
+		return
 	}
 	c.Redirect("/", 302)
 }
@@ -96,6 +106,7 @@ func (c *Controller) SetLoginContext(name interface{}) {
 func (c *Controller) RenderLayout(tplName string) {
 	c.Layout = "meta/layout.tpl"
 	c.TplName = tplName
+	c.Data["csrf_token"] = c.XSRFToken()
 	c.LayoutSections = make(map[string]string)
 	c.LayoutSections["Header"] = "meta/header.tpl"
 	c.LayoutSections["Scripts"] = "meta/scripts.tpl"

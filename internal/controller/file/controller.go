@@ -38,7 +38,10 @@ func (c *Controller) List() {
 	ctx := c.Ctx.Request.Context()
 	files, err := c.getMemoService().ListFile(ctx, username)
 	if err != nil {
-		panic(err)
+		logs.Error("ListFile failed: ", err)
+		c.Ctx.ResponseWriter.WriteHeader(500)
+		_, _ = c.Ctx.ResponseWriter.Write([]byte("Internal Server Error"))
+		return
 	}
 	logs.Debug(len(files))
 	c.RenderLayout("file.tpl")
@@ -51,7 +54,10 @@ func (c *Controller) Save() {
 	username := c.CurrentUsername()
 	file := FileForm{}
 	if err := c.ParseForm(&file); err != nil {
-		panic(err)
+		c.Ctx.ResponseWriter.WriteHeader(400)
+		c.Data["json"] = map[string]string{"msg": "Invalid request."}
+		c.ServeJSON()
+		return
 	}
 	ctx := c.Ctx.Request.Context()
 	replacedFile := basectrl.Replace(file.Base64File, " ", "+")
@@ -76,7 +82,11 @@ func (c *Controller) Clear() {
 	username := c.CurrentUsername()
 	ctx := c.Ctx.Request.Context()
 	if err := c.getMemoService().ClearFile(ctx, username); err != nil {
-		panic(err)
+		logs.Error("ClearFile failed: ", err)
+		c.Ctx.ResponseWriter.WriteHeader(500)
+		c.Data["json"] = map[string]string{"msg": "Internal server error."}
+		c.ServeJSON()
+		return
 	}
 	c.Redirect("/file", 302)
 }
@@ -103,6 +113,7 @@ func (c *Controller) SetLoginContext(name interface{}) {
 func (c *Controller) RenderLayout(tplName string) {
 	c.Layout = "meta/layout.tpl"
 	c.TplName = tplName
+	c.Data["csrf_token"] = c.XSRFToken()
 	c.LayoutSections = make(map[string]string)
 	c.LayoutSections["Header"] = "meta/header.tpl"
 	c.LayoutSections["Scripts"] = "meta/scripts.tpl"

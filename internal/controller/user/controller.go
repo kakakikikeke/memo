@@ -70,7 +70,10 @@ func (c *Controller) Check() {
 	c.LogAccess("Check")
 	u := UserForm{}
 	if err := c.ParseForm(&u); err != nil {
-		panic(err)
+		c.Ctx.ResponseWriter.WriteHeader(400)
+		c.Data["json"] = map[string]string{"msg": "Invalid request."}
+		c.ServeJSON()
+		return
 	}
 	ctx := c.Ctx.Request.Context()
 	ok, err := c.getMemoService().Authenticate(ctx, u.Name, u.Pass)
@@ -94,7 +97,10 @@ func (c *Controller) Create() {
 	c.LogAccess("Create")
 	newu := NewUserForm{}
 	if err := c.ParseForm(&newu); err != nil {
-		panic(err)
+		c.Ctx.ResponseWriter.WriteHeader(400)
+		c.Data["json"] = map[string]string{"msg": "Invalid request."}
+		c.ServeJSON()
+		return
 	}
 	if newu.Pass != newu.Pass2 {
 		c.Ctx.ResponseWriter.WriteHeader(403)
@@ -110,7 +116,11 @@ func (c *Controller) Create() {
 			c.ServeJSON()
 			return
 		}
-		panic(err)
+		logs.Error("CreateUser failed: ", err)
+		c.Ctx.ResponseWriter.WriteHeader(500)
+		c.Data["json"] = map[string]string{"msg": "Internal server error."}
+		c.ServeJSON()
+		return
 	}
 	c.SetSession("user", newu.Name)
 	c.TplName = "account/success.tpl"
@@ -126,7 +136,11 @@ func (c *Controller) Delete() {
 	}
 	ctx := c.Ctx.Request.Context()
 	if err := c.getMemoService().DeleteUser(ctx, name.(string)); err != nil {
-		panic(err)
+		logs.Error("DeleteUser failed: ", err)
+		c.Ctx.ResponseWriter.WriteHeader(500)
+		c.Data["json"] = map[string]string{"msg": "Internal server error."}
+		c.ServeJSON()
+		return
 	}
 	c.Data["isLogin"] = false
 	c.Data["name"] = nil
@@ -146,6 +160,7 @@ func (c *Controller) CurrentUsername() string {
 func (c *Controller) RenderLayout(tplName string) {
 	c.Layout = "meta/layout.tpl"
 	c.TplName = tplName
+	c.Data["csrf_token"] = c.XSRFToken()
 	c.LayoutSections = make(map[string]string)
 	c.LayoutSections["Header"] = "meta/header.tpl"
 	c.LayoutSections["Scripts"] = "meta/scripts.tpl"
