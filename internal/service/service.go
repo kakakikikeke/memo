@@ -2,119 +2,121 @@ package service
 
 import (
 	"context"
-	"errors"
 	"strings"
 
 	"github.com/kakakikikeke/memo/internal/model"
 	"github.com/kakakikikeke/memo/internal/repository"
-	"golang.org/x/crypto/bcrypt"
+	filesvc "github.com/kakakikikeke/memo/internal/service/file"
+	imagesvc "github.com/kakakikikeke/memo/internal/service/image"
+	textsvc "github.com/kakakikikeke/memo/internal/service/text"
+	usersvc "github.com/kakakikikeke/memo/internal/service/user"
 )
 
 var (
-	ErrTextLimitExceeded  = errors.New("exceeds the number of texts that can be uploaded")
-	ErrImageLimitExceeded = errors.New("exceeds the number of images that can be uploaded")
-	ErrFileLimitExceeded  = errors.New("exceeds the number of files that can be uploaded")
-	ErrUserAlreadyExists  = errors.New("specified user already exists")
+	ErrTextLimitExceeded  = textsvc.ErrTextLimitExceeded
+	ErrImageLimitExceeded = imagesvc.ErrImageLimitExceeded
+	ErrFileLimitExceeded  = filesvc.ErrFileLimitExceeded
+	ErrUserAlreadyExists  = usersvc.ErrUserAlreadyExists
 )
 
 type MemoService struct {
-	repo repository.Repository
+	repo         repository.Repository
+	textService  *textsvc.Service
+	imageService *imagesvc.Service
+	fileService  *filesvc.Service
+	userService  *usersvc.Service
 }
 
 func NewMemoService(repo repository.Repository) *MemoService {
 	return &MemoService{repo: repo}
 }
 
+func (s *MemoService) textSvc() *textsvc.Service {
+	if s.textService == nil {
+		s.textService = textsvc.NewService(s.repo)
+	}
+	return s.textService
+}
+
+func (s *MemoService) imageSvc() *imagesvc.Service {
+	if s.imageService == nil {
+		s.imageService = imagesvc.NewService(s.repo)
+	}
+	return s.imageService
+}
+
+func (s *MemoService) fileSvc() *filesvc.Service {
+	if s.fileService == nil {
+		s.fileService = filesvc.NewService(s.repo)
+	}
+	return s.fileService
+}
+
+func (s *MemoService) userSvc() *usersvc.Service {
+	if s.userService == nil {
+		s.userService = usersvc.NewService(s.repo)
+	}
+	return s.userService
+}
+
 func (s *MemoService) ListText(ctx context.Context, username string) ([]string, error) {
-	return s.repo.List(ctx, model.UserKey(username, model.KeyMemo))
+	return s.textSvc().List(ctx, username)
 }
 
 func (s *MemoService) SaveText(ctx context.Context, username string, msg string) error {
-	return s.repo.Save(ctx, model.UserKey(username, model.KeyMemo), msg)
+	return s.textSvc().Save(ctx, username, msg)
 }
 
 func (s *MemoService) ClearText(ctx context.Context, username string) error {
-	return s.repo.Delete(ctx, model.UserKey(username, model.KeyMemo))
+	return s.textSvc().Clear(ctx, username)
 }
 
 func (s *MemoService) ListImage(ctx context.Context, username string) ([]string, error) {
-	return s.repo.List(ctx, model.UserKey(username, model.KeyImage))
+	return s.imageSvc().List(ctx, username)
 }
 
 func (s *MemoService) SaveImage(ctx context.Context, username string, base64 string) error {
-	return s.repo.Save(ctx, model.UserKey(username, model.KeyImage), base64)
+	return s.imageSvc().Save(ctx, username, base64)
 }
 
 func (s *MemoService) ClearImage(ctx context.Context, username string) error {
-	return s.repo.Delete(ctx, model.UserKey(username, model.KeyImage))
+	return s.imageSvc().Clear(ctx, username)
 }
 
 func (s *MemoService) ListFile(ctx context.Context, username string) ([]string, error) {
-	return s.repo.List(ctx, model.UserKey(username, model.KeyFile))
+	return s.fileSvc().List(ctx, username)
 }
 
 func (s *MemoService) SaveFile(ctx context.Context, username string, value string) error {
-	return s.repo.Save(ctx, model.UserKey(username, model.KeyFile), value)
+	return s.fileSvc().Save(ctx, username, value)
 }
 
 func (s *MemoService) ClearFile(ctx context.Context, username string) error {
-	return s.repo.Delete(ctx, model.UserKey(username, model.KeyFile))
+	return s.fileSvc().Clear(ctx, username)
 }
 
 func (s *MemoService) Authenticate(ctx context.Context, username, password string) (bool, error) {
-	hash, err := s.repo.Get(ctx, username)
-	if err != nil {
-		return false, err
-	}
-	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) == nil, nil
+	return s.userSvc().Authenticate(ctx, username, password)
 }
 
 func (s *MemoService) CreateUser(ctx context.Context, username, password string) error {
-	if _, err := s.repo.Get(ctx, username); err == nil {
-		return ErrUserAlreadyExists
-	}
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		return err
-	}
-	return s.repo.Set(ctx, username, string(hash), 0)
+	return s.userSvc().Create(ctx, username, password)
 }
 
 func (s *MemoService) DeleteUser(ctx context.Context, username string) error {
-	return s.repo.Delete(ctx, model.UserKey(username, model.KeyMemo), model.UserKey(username, model.KeyFile), model.UserKey(username, model.KeyImage), username)
+	return s.userSvc().Delete(ctx, username)
 }
 
 func (s *MemoService) SaveTextWithLimit(ctx context.Context, username, msg string) error {
-	items, err := s.repo.List(ctx, model.UserKey(username, model.KeyMemo))
-	if err != nil {
-		return err
-	}
-	if len(items) >= 10 {
-		return ErrTextLimitExceeded
-	}
-	return s.repo.Save(ctx, model.UserKey(username, model.KeyMemo), msg)
+	return s.textSvc().SaveWithLimit(ctx, username, msg)
 }
 
 func (s *MemoService) SaveImageWithLimit(ctx context.Context, username, base64 string) error {
-	items, err := s.repo.List(ctx, model.UserKey(username, model.KeyImage))
-	if err != nil {
-		return err
-	}
-	if len(items) >= 1 {
-		return ErrImageLimitExceeded
-	}
-	return s.repo.Save(ctx, model.UserKey(username, model.KeyImage), base64)
+	return s.imageSvc().SaveWithLimit(ctx, username, base64)
 }
 
 func (s *MemoService) SaveFileWithLimit(ctx context.Context, username, value string) error {
-	items, err := s.repo.List(ctx, model.UserKey(username, model.KeyFile))
-	if err != nil {
-		return err
-	}
-	if len(items) >= 1 {
-		return ErrFileLimitExceeded
-	}
-	return s.repo.Save(ctx, model.UserKey(username, model.KeyFile), value)
+	return s.fileSvc().SaveWithLimit(ctx, username, value)
 }
 
 func (s *MemoService) ReplaceSpaceWithPlus(value string) string {
