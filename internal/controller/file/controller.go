@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/beego/beego/v2/core/logs"
-	"github.com/beego/beego/v2/server/web"
+	"github.com/kakakikikeke/memo/internal/controller"
 	basectrl "github.com/kakakikikeke/memo/internal/controller"
 	"github.com/kakakikikeke/memo/internal/database"
 	"github.com/kakakikikeke/memo/internal/repository"
@@ -17,7 +17,7 @@ type FileForm struct {
 }
 
 type Controller struct {
-	web.Controller
+	controller.BaseController
 	memoService *service.MemoService
 }
 
@@ -89,40 +89,6 @@ func (c *Controller) Clear() {
 		return
 	}
 	c.Redirect("/file", 302)
-}
-
-func (c *Controller) CurrentUsername() string {
-	if name := c.GetSession("user"); name != nil {
-		if username, ok := name.(string); ok {
-			return username
-		}
-	}
-	return "anonymous"
-}
-
-func (c *Controller) SetLoginContext(name interface{}) {
-	if name == nil {
-		c.Data["isLogin"] = false
-		c.Data["name"] = nil
-		return
-	}
-	c.Data["isLogin"] = true
-	c.Data["name"] = name
-}
-
-func (c *Controller) RenderLayout(tplName string) {
-	c.Layout = "meta/layout.tpl"
-	c.TplName = tplName
-	c.Data["csrf_token"] = c.XSRFToken()
-	c.LayoutSections = make(map[string]string)
-	c.LayoutSections["Header"] = "meta/header.tpl"
-	c.LayoutSections["Scripts"] = "meta/scripts.tpl"
-}
-
-func (c *Controller) LogAccess(action string) {
-	name := c.CurrentUsername()
-	ip := c.Ctx.Input.IP()
-	logs.Info(action, " user=", name, " ip=", ip)
 }
 
 func (c *Controller) ListFile(ctx context.Context, username string) ([]string, error) {
