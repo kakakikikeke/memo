@@ -20,41 +20,41 @@ var (
 )
 
 type MemoService struct {
-	repo         repository.Repository
+	repo         repository.Provider
 	textService  *textsvc.Service
 	imageService *imagesvc.Service
 	fileService  *filesvc.Service
 	userService  *usersvc.Service
 }
 
-func NewMemoService(repo repository.Repository) *MemoService {
+func NewMemoService(repo repository.Provider) *MemoService {
 	return &MemoService{repo: repo}
 }
 
 func (s *MemoService) textSvc() *textsvc.Service {
 	if s.textService == nil {
-		s.textService = textsvc.NewService(s.repo)
+		s.textService = textsvc.NewService(s.repo.Text())
 	}
 	return s.textService
 }
 
 func (s *MemoService) imageSvc() *imagesvc.Service {
 	if s.imageService == nil {
-		s.imageService = imagesvc.NewService(s.repo)
+		s.imageService = imagesvc.NewService(s.repo.Image())
 	}
 	return s.imageService
 }
 
 func (s *MemoService) fileSvc() *filesvc.Service {
 	if s.fileService == nil {
-		s.fileService = filesvc.NewService(s.repo)
+		s.fileService = filesvc.NewService(s.repo.File())
 	}
 	return s.fileService
 }
 
 func (s *MemoService) userSvc() *usersvc.Service {
 	if s.userService == nil {
-		s.userService = usersvc.NewService(s.repo)
+		s.userService = usersvc.NewService(s.repo.User())
 	}
 	return s.userService
 }

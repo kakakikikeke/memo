@@ -12,6 +12,7 @@ import (
 
 	beegocontext "github.com/beego/beego/v2/server/web/context"
 	textctrl "github.com/kakakikikeke/memo/internal/controller/text"
+	"github.com/kakakikikeke/memo/internal/repository"
 	"github.com/kakakikikeke/memo/internal/service"
 	"github.com/stretchr/testify/assert"
 )
@@ -71,6 +72,22 @@ func (m *mockRepository) Get(ctx stdctx.Context, key string) (string, error) {
 
 func (m *mockRepository) Set(ctx stdctx.Context, key string, value string, expiration time.Duration) error {
 	return nil
+}
+
+func (m *mockRepository) Text() repository.TextRepository {
+	return m
+}
+
+func (m *mockRepository) Image() repository.ImageRepository {
+	return m
+}
+
+func (m *mockRepository) File() repository.FileRepository {
+	return m
+}
+
+func (m *mockRepository) User() repository.UserRepository {
+	return m
 }
 
 func TestSaveText(t *testing.T) {

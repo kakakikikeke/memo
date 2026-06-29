@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/kakakikikeke/memo/internal/repository"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/require"
 )
@@ -45,6 +46,22 @@ func (r *inMemoryRepository) Get(ctx context.Context, key string) (string, error
 func (r *inMemoryRepository) Set(ctx context.Context, key string, value string, expiration time.Duration) error {
 	r.users[key] = value
 	return nil
+}
+
+func (r *inMemoryRepository) Text() repository.TextRepository {
+	return r
+}
+
+func (r *inMemoryRepository) Image() repository.ImageRepository {
+	return r
+}
+
+func (r *inMemoryRepository) File() repository.FileRepository {
+	return r
+}
+
+func (r *inMemoryRepository) User() repository.UserRepository {
+	return r
 }
 
 func TestSaveTextPersistsMessage(t *testing.T) {
