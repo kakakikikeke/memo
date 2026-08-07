@@ -4,7 +4,7 @@ go 1.26
 
 require (
 	github.com/beego/beego/v2 v2.3.10
-	github.com/redis/go-redis/v9 v9.21.0
+	github.com/redis/go-redis/v9 v9.22.0
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/crypto v0.54.0
 )
