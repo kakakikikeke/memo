@@ -65,7 +65,6 @@ func main() {
 	web.AddFuncMap("is_end", controller.IsEnd)
 	web.AddFuncMap("get_file_name", controller.GetFileName)
 	web.AddFuncMap("get_content", controller.GetContent)
-	web.AddFuncMap("safe", controller.Safe)
 	// for error handling
 	web.ErrorController(&controller.ErrorController{})
 	web.Run()

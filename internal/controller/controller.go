@@ -2,7 +2,6 @@ package controller
 
 import (
 	"encoding/base64"
-	"html/template"
 	"strings"
 
 	"github.com/beego/beego/v2/core/logs"
@@ -137,8 +136,4 @@ func isAllowedFileMIME(mime string) bool {
 	}
 	_, ok := allowed[mime]
 	return ok
-}
-
-func Safe(s string) template.HTML {
-	return template.HTML(s)
 }
