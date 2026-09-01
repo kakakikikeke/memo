@@ -188,7 +188,8 @@ $('#clear_file').click(function() {
 });
 
 // for user
-$('#logout').click(function() {
+$('#logout').click(function(event) {
+  event.preventDefault();
   $.ajax({
     type: "POST",
     url: "/logout",
