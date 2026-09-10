@@ -1,6 +1,6 @@
 FROM golang:1.26.4-alpine3.24
 
-ADD ./ $GOPATH/src/github.com/kakakikikeke/memo
+COPY . $GOPATH/src/github.com/kakakikikeke/memo
 WORKDIR $GOPATH/src/github.com/kakakikikeke/memo
 
 RUN addgroup -S memo && adduser -S -G memo memo
